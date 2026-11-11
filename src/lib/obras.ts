@@ -14,6 +14,11 @@ export const getObra = cache(async (obraId: string) => {
     .eq("id", obraId)
     .maybeSingle()
   if (!data) notFound()
+  // Perfil campo não lê "pessoas": busca só o nome pela view básica
+  if (data.cliente_id && !data.cliente) {
+    const { data: c } = await supabase.from("v_pessoas_basico").select("id, nome").eq("id", data.cliente_id).maybeSingle()
+    if (c?.id && c.nome) return { ...data, cliente: { id: c.id, nome: c.nome } }
+  }
   return data
 })
 
