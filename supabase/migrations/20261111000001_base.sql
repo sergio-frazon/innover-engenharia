@@ -42,6 +42,17 @@ $$;
 -- Mudança de status somente via RPC (docs/05-permissoes.md)
 -- -----------------------------------------------------------------------------
 
+-- Chamada sem usuário que NÃO veio da API pública: migrations, seed, Auth (gatilho de novo usuário)
+-- e a chave service_role do servidor. Visitante anônimo (role anon) nunca é sessão interna.
+create or replace function public.sessao_interna()
+returns boolean
+language sql
+stable
+set search_path = ''
+as $$
+  select auth.uid() is null and coalesce(auth.role(), '') not in ('anon', 'authenticated')
+$$;
+
 create or replace function public.via_rpc()
 returns boolean
 language sql
@@ -66,7 +77,7 @@ language plpgsql
 set search_path = ''
 as $$
 begin
-  if public.via_rpc() or auth.uid() is null then
+  if public.via_rpc() or public.sessao_interna() then
     return new;
   end if;
   if tg_op = 'INSERT' and new.status is distinct from tg_argv[0] then
@@ -179,7 +190,7 @@ set search_path = ''
 as $$
 begin
   -- auth.uid() nulo = service_role / migrations: liberado
-  if auth.uid() is not null and not public.eh_admin() then
+  if not public.sessao_interna() and not public.eh_admin() then
     if new.papel is distinct from old.papel
        or new.ativo is distinct from old.ativo
        or new.email is distinct from old.email then

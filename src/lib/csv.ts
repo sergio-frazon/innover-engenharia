@@ -4,7 +4,8 @@ export type ColunaCsv<T> = { titulo: string; valor: (linha: T) => string | numbe
 
 function celula(v: string | number | null | undefined): string {
   if (v === null || v === undefined) return ""
-  const texto = typeof v === "number" ? String(v).replace(".", ",") : v
+  // Texto começando com = + - @ (ou tab/CR) vira fórmula no Excel: prefixa com ' para ficar só texto
+  const texto = typeof v === "number" ? String(v).replace(".", ",") : /^[=+\-@\t\r]/.test(v) ? `'${v}` : v
   return /[";\r\n]/.test(texto) ? `"${texto.replace(/"/g, '""')}"` : texto
 }
 

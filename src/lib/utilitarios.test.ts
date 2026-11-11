@@ -3,6 +3,7 @@ import { data, diferencaDias, documentoFormatado, lerNumero, moeda, percentual, 
 import { cnpjValido, cpfValido } from "./documentos-br"
 import { mensagemDeErro } from "./erros"
 import { gerarCsv } from "./csv"
+import { caminhoInterno } from "./redirecionamento"
 import { dividirParcelas, somaParcelas } from "./parcelas"
 
 describe("format", () => {
@@ -72,6 +73,15 @@ describe("csv", () => {
     expect(csv.startsWith("﻿")).toBe(true)
     expect(csv).toContain('"Bloco ""A""; térreo";10,5')
   })
+  it("neutraliza fórmulas do Excel em textos", () => {
+    const csv = gerarCsv([{ titulo: "Descrição", valor: (l: { d: string; v: number }) => l.d }, { titulo: "Valor", valor: (l) => l.v }], [
+      { d: "=HYPERLINK(\"http://x\")", v: -5 },
+      { d: "@SOMA(A1)", v: 1 },
+    ])
+    expect(csv).toContain("'=HYPERLINK")
+    expect(csv).toContain("'@SOMA(A1)")
+    expect(csv).toContain(";-5")
+  })
 })
 
 describe("parcelas", () => {
@@ -83,5 +93,16 @@ describe("parcelas", () => {
   it("respeita o último dia do mês", () => {
     const p = dividirParcelas(300, 3, "2026-01-31")
     expect(p.map((x) => x.vencimento)).toEqual(["2026-01-31", "2026-02-28", "2026-03-31"])
+  })
+})
+
+describe("redirecionamento", () => {
+  it("aceita só caminhos internos", () => {
+    expect(caminhoInterno("/obras/1")).toBe("/obras/1")
+    expect(caminhoInterno("//site.com")).toBe("/painel")
+    expect(caminhoInterno("/\\site.com")).toBe("/painel")
+    expect(caminhoInterno("https://site.com")).toBe("/painel")
+    expect(caminhoInterno("/a\nb")).toBe("/painel")
+    expect(caminhoInterno(null)).toBe("/painel")
   })
 })

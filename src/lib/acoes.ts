@@ -22,16 +22,16 @@ export function falhaValidacao(erro: z.ZodError): Resultado {
 
 const vazioParaNull = (v: unknown) => (typeof v === "string" && v.trim() === "" ? null : v)
 
-export const texto = (mensagem = "Campo obrigatório.") => z.string({ required_error: mensagem }).trim().min(1, mensagem)
+export const texto = (mensagem = "Campo obrigatório.") => z.string({ error: mensagem }).trim().min(1, mensagem)
 
 export const textoOpcional = z.preprocess(vazioParaNull, z.string().trim().nullable().optional()).transform((v) => v ?? null)
 
-export const uuid = (mensagem = "Selecione uma opção.") => z.string({ required_error: mensagem }).uuid(mensagem)
+export const uuid = (mensagem = "Selecione uma opção.") => z.guid({ error: mensagem })
 
-export const uuidOpcional = z.preprocess(vazioParaNull, z.string().uuid().nullable().optional()).transform((v) => v ?? null)
+export const uuidOpcional = z.preprocess(vazioParaNull, z.guid().nullable().optional()).transform((v) => v ?? null)
 
 export const dataISO = (mensagem = "Informe a data.") =>
-  z.string({ required_error: mensagem }).regex(/^\d{4}-\d{2}-\d{2}$/, mensagem)
+  z.string({ error: mensagem }).regex(/^\d{4}-\d{2}-\d{2}$/, mensagem)
 
 export const dataOpcional = z
   .preprocess(vazioParaNull, z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida.").nullable().optional())
@@ -45,7 +45,7 @@ export const numeroBR = (opcoes: { min?: number; positivo?: boolean; mensagem?: 
   z.preprocess(
     (v) => lerNumero(v),
     z
-      .number({ required_error: opcoes.mensagem ?? "Informe um número.", invalid_type_error: opcoes.mensagem ?? "Informe um número." })
+      .number({ error: opcoes.mensagem ?? "Informe um número." })
       .refine((n) => (opcoes.positivo ? n > 0 : true), "Informe um valor maior que zero.")
       .refine((n) => (opcoes.min !== undefined ? n >= opcoes.min : true), `O valor mínimo é ${opcoes.min}.`),
   )

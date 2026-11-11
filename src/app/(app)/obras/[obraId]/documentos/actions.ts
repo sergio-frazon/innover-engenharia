@@ -12,7 +12,7 @@ const documentoSchema = z.object({
   grupo_id: uuidOpcional,
   etapa_id: uuidOpcional,
   titulo: texto("Informe o título."),
-  categoria: z.enum(["projeto", "planta", "memorial", "contrato", "licenca", "outro"], { errorMap: () => ({ message: "Selecione a categoria." }) }),
+  categoria: z.enum(["projeto", "planta", "memorial", "contrato", "licenca", "outro"], { error: "Selecione a categoria." }),
   observacao: textoOpcional,
   caminho_arquivo: texto(),
   nome_arquivo: texto(),

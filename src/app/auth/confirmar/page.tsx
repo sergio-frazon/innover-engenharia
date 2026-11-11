@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { Loader2 } from "lucide-react"
+import { caminhoInterno } from "@/lib/redirecionamento"
 
 export default function PaginaConfirmar() {
   const [erro, setErro] = useState<string | null>(null)
@@ -11,8 +12,7 @@ export default function PaginaConfirmar() {
     if (iniciado.current) return
     iniciado.current = true
 
-    const next = new URLSearchParams(window.location.search).get("next") ?? "/painel"
-    const destino = next.startsWith("/") && !next.startsWith("//") ? next : "/painel"
+    const destino = caminhoInterno(new URLSearchParams(window.location.search).get("next"))
     const hash = new URLSearchParams(window.location.hash.slice(1))
     const access_token = hash.get("access_token")
     const refresh_token = hash.get("refresh_token")

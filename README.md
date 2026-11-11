@@ -70,6 +70,14 @@ NEXT_DIST_DIR=.next-verificacao npm run build
 - `npm test`: testes das funções de formatação, parcelas e cronograma (Vitest).
 - `npx supabase test db`: 137 testes das regras de negócio e das permissões direto no banco (pgTAP).
 
+Teste de segurança (ataques diretos à API com cada perfil, incluindo arquivos). Rode logo depois de um `db reset`:
+
+```bash
+npx tsx scripts/teste-seguranca.ts
+```
+
+Relatório da última revisão: [`docs/10-seguranca.md`](docs/10-seguranca.md).
+
 ---
 
 ## Colocar no ar (produção)
@@ -106,7 +114,11 @@ NEXT_DIST_DIR=.next-verificacao npm run build
 7. Em **Authentication → Sign In / Providers → Email**, ajuste **Email OTP Expiration** para `86400`
    (24 horas), para que o convite não expire antes da pessoa abrir o e-mail.
 8. Em **Authentication → Emails → SMTP Settings**, configure um SMTP próprio (Resend, Brevo, etc.). O SMTP padrão do Supabase envia poucos e-mails por hora e não serve para uso real.
-9. **Backup:** o plano gratuito não tem backup gerenciado. Antes de colocar dados reais, assine o plano **Pro**, que faz backup diário com restauração.
+9. Em **Authentication → Sign In / Providers → Email**, ajuste **Minimum password length** para `8`
+   (o mesmo mínimo exigido pelas telas).
+10. Em **Authentication → Attack Protection**, ative **Prevent use of leaked passwords** (plano Pro).
+11. Em **Advisors → Security Advisor**, rode a análise e confirme que não há alertas.
+12. **Backup:** o plano gratuito não tem backup gerenciado. Antes de colocar dados reais, assine o plano **Pro**, que faz backup diário com restauração.
 
 ### 2. Vercel
 

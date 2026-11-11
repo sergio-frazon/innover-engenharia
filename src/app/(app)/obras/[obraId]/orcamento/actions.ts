@@ -43,7 +43,7 @@ const itemSchema = z.object({
   obra_id: uuid(),
   versao_id: uuid(),
   servico_id: uuid("Selecione o serviço."),
-  natureza: z.enum(["material", "mao_de_obra", "equipamento", "outro"], { errorMap: () => ({ message: "Selecione a natureza." }) }),
+  natureza: z.enum(["material", "mao_de_obra", "equipamento", "outro"], { error: "Selecione a natureza." }),
   material_id: uuidOpcional,
   descricao: texto("Informe a descrição."),
   unidade: texto("Informe a unidade."),

@@ -124,7 +124,7 @@ as $$
 begin
   if tg_op = 'DELETE' then
     -- R-DIA-06
-    if auth.uid() is not null then
+    if not public.sessao_interna() then
       if old.status <> 'rascunho' then
         perform public.erro('Somente diários em rascunho podem ser excluídos.');
       end if;
@@ -147,7 +147,7 @@ begin
       perform public.erro('Não é possível mudar a obra ou a data de um diário. Crie um novo.');
     end if;
     -- R-DIA-03
-    if auth.uid() is not null and not public.via_rpc() and not public.tem_papel('admin', 'gestor')
+    if not public.sessao_interna() and not public.via_rpc() and not public.tem_papel('admin', 'gestor')
        and old.status not in ('rascunho', 'correcao_solicitada') then
       perform public.erro('Este diário já foi enviado para conferência e só o gestor pode alterá-lo.');
     end if;
@@ -171,7 +171,7 @@ as $$
 declare
   v_diario uuid := case when tg_op = 'DELETE' then old.diario_id else new.diario_id end;
 begin
-  if auth.uid() is null or public.via_rpc() then
+  if public.sessao_interna() or public.via_rpc() then
     return case when tg_op = 'DELETE' then old else new end;
   end if;
   -- Diário apagado em cascata (rascunho) já não existe
@@ -260,7 +260,7 @@ declare
   v_dup record;
 begin
   if tg_op = 'DELETE' then
-    if auth.uid() is not null and not public.via_rpc() then
+    if not public.sessao_interna() and not public.via_rpc() then
       -- Medição de diário apagado em cascata
       if old.diario_id is not null and not exists (select 1 from public.diarios where id = old.diario_id) then
         return old;
@@ -283,7 +283,7 @@ begin
   new.obra_id := v_servico.obra_id;
   perform public.exigir_obra_editavel(new.obra_id);
 
-  if tg_op = 'UPDATE' and not public.via_rpc() and auth.uid() is not null then
+  if tg_op = 'UPDATE' and not public.via_rpc() and not public.sessao_interna() then
     if new.servico_id <> old.servico_id or new.diario_id is distinct from old.diario_id then
       perform public.erro('Não é possível trocar o serviço ou o diário de uma medição. Exclua e registre novamente.');
     end if;
@@ -307,7 +307,7 @@ begin
     if v_diario.obra_id <> new.obra_id then
       perform public.erro('O serviço escolhido pertence a outra obra.');
     end if;
-    if auth.uid() is not null and not public.via_rpc() and not public.pode_editar_diario(new.diario_id) then
+    if not public.sessao_interna() and not public.via_rpc() and not public.pode_editar_diario(new.diario_id) then
       perform public.erro('Este diário já foi enviado para conferência e só o gestor pode alterá-lo.');
     end if;
     new.periodo_inicio := v_diario.data;

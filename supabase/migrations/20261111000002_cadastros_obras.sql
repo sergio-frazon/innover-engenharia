@@ -166,7 +166,7 @@ security definer
 set search_path = ''
 as $$
   select public.eh_admin()
-      or auth.uid() is null
+      or public.sessao_interna()
       or exists (select 1 from public.obras o
                  where o.id = p_obra and o.situacao not in ('concluida', 'cancelada'))
 $$;
@@ -221,7 +221,7 @@ begin
 
   -- R-OBR-03: obra fechada só muda pelo admin
   if tg_op = 'UPDATE' and old.situacao in ('concluida', 'cancelada')
-     and auth.uid() is not null and not public.eh_admin() then
+     and not public.sessao_interna() and not public.eh_admin() then
     perform public.erro('Esta obra está concluída ou cancelada e não pode ser alterada.');
   end if;
 
@@ -273,7 +273,7 @@ security definer
 set search_path = ''
 as $$
 begin
-  if auth.uid() is null then
+  if public.sessao_interna() then
     return old;
   end if;
   if exists (select 1 from public.obras o where o.id = old.obra_id and o.responsavel_id = old.perfil_id) then

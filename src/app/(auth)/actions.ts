@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
 import { falhaValidacao, type Resultado } from "@/lib/acoes"
+import { caminhoInterno } from "@/lib/redirecionamento"
 
 const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email("Informe um e-mail válido."),
@@ -30,8 +31,7 @@ export async function entrar(_: Resultado | null, formData: FormData): Promise<R
     return { ok: false, erro: "Seu acesso está desativado. Fale com o administrador." }
   }
 
-  const voltar = dados.data.voltar && dados.data.voltar.startsWith("/") && !dados.data.voltar.startsWith("//") ? dados.data.voltar : "/painel"
-  redirect(voltar)
+  redirect(caminhoInterno(dados.data.voltar))
 }
 
 const recuperarSchema = z.object({ email: z.string().trim().toLowerCase().email("Informe um e-mail válido.") })

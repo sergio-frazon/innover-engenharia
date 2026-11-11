@@ -8,7 +8,7 @@ import { falhaValidacao, texto, textoOpcional, type Resultado } from "@/lib/acoe
 import { mensagemDeErro } from "@/lib/erros"
 import { SEM_PERMISSAO, usuarioDaAcao } from "@/lib/auth"
 
-const papelSchema = z.enum(["admin", "gestor", "campo", "financeiro"], { errorMap: () => ({ message: "Selecione o perfil." }) })
+const papelSchema = z.enum(["admin", "gestor", "campo", "financeiro"], { error: "Selecione o perfil." })
 
 function obrasDoForm(formData: FormData): string[] {
   return formData.getAll("obras").map(String).filter((v) => /^[0-9a-f-]{36}$/i.test(v))
@@ -77,7 +77,7 @@ export async function convidarUsuario(_: Resultado | null, formData: FormData): 
 }
 
 const editarSchema = z.object({
-  id: z.string().uuid(),
+  id: z.guid(),
   nome: texto("Informe o nome."),
   telefone: textoOpcional,
   papel: papelSchema,

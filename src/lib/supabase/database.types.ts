@@ -286,6 +286,12 @@ isOneToOne: false
       referencedRelation: "materiais"
       referencedColumns: ["id"]
     },{
+      foreignKeyName: "diario_materiais_material_id_fkey"
+      columns: ["material_id"]
+isOneToOne: false
+      referencedRelation: "v_materiais_basico"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "diario_materiais_servico_id_fkey"
       columns: ["servico_id"]
 isOneToOne: false
@@ -680,6 +686,12 @@ isOneToOne: false
       referencedRelation: "materiais"
       referencedColumns: ["id"]
     },{
+      foreignKeyName: "orcamento_itens_material_id_fkey"
+      columns: ["material_id"]
+isOneToOne: false
+      referencedRelation: "v_materiais_basico"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "orcamento_itens_servico_id_fkey"
       columns: ["servico_id"]
 isOneToOne: false
@@ -939,6 +951,20 @@ isOneToOne: false
       referencedRelation: "v_custo_obra"
       referencedColumns: ["obra_id"]
     }
+                  ]
+                },"v_materiais_basico": {
+                  Row: {
+                    "ativo": boolean,"descricao": string,"id": string,"unidade": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                           "ativo"?: boolean | null,"descricao"?: string | null,"id"?: string | null,"unidade"?: string | null
+                         }
+                        Update: {
+                           "ativo"?: boolean | null,"descricao"?: string | null,"id"?: string | null,"unidade"?: string | null
+                         }
+                        Relationships: [
+                    
                   ]
                 },"v_orcamento_totais_etapa": {
                   Row: {
@@ -1208,6 +1234,9 @@ isOneToOne: false
                            },
 "servicos_pode_desativar":
 { Args: { "p_servico": string }; Returns: boolean
+                           },
+"sessao_interna":
+{ Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "solicitar_correcao_diario":
 { Args: { "p_comentario": string,"p_diario": string }; Returns: undefined

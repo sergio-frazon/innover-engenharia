@@ -117,7 +117,7 @@ const baixaSchema = z.object({
   valor: numeroBR({ positivo: true, mensagem: "Informe o valor pago." }),
   juros_multa: numeroBR({ min: 0 }).optional().default(0),
   desconto: numeroBR({ min: 0 }).optional().default(0),
-  forma: z.enum(["pix", "boleto", "transferencia", "dinheiro", "cartao", "cheque", "outro"], { errorMap: () => ({ message: "Selecione a forma." }) }),
+  forma: z.enum(["pix", "boleto", "transferencia", "dinheiro", "cartao", "cheque", "outro"], { error: "Selecione a forma." }),
   comprovante_caminho: textoOpcional,
   observacao: textoOpcional,
 })

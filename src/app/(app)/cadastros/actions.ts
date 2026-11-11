@@ -62,7 +62,7 @@ const idSchema = z.object({ id: uuidOpcional })
 const pessoaSchema = z
   .object({
     nome: texto("Informe o nome."),
-    tipo_pessoa: z.enum(["fisica", "juridica"], { errorMap: () => ({ message: "Selecione o tipo." }) }),
+    tipo_pessoa: z.enum(["fisica", "juridica"], { error: "Selecione o tipo." }),
     documento: textoOpcional.transform((v) => (v ? somenteDigitos(v) : null)),
     eh_cliente: booleano,
     eh_fornecedor: booleano,
@@ -99,7 +99,7 @@ const profissionalSchema = z
   .object({
     nome: texto("Informe o nome."),
     funcao: texto("Informe a função."),
-    vinculo: z.enum(["proprio", "terceirizado"], { errorMap: () => ({ message: "Selecione o vínculo." }) }),
+    vinculo: z.enum(["proprio", "terceirizado"], { error: "Selecione o vínculo." }),
     empresa_id: uuidOpcional,
     telefone: textoOpcional,
   })
@@ -142,7 +142,7 @@ export async function alternarMaterial(id: string, ativo: boolean) {
 
 const equipamentoSchema = z.object({
   descricao: texto("Informe a descrição."),
-  propriedade: z.enum(["proprio", "alugado"], { errorMap: () => ({ message: "Selecione." }) }),
+  propriedade: z.enum(["proprio", "alugado"], { error: "Selecione." }),
   identificacao: textoOpcional,
 })
 
@@ -160,7 +160,7 @@ export async function alternarEquipamento(id: string, ativo: boolean) {
 
 const categoriaSchema = z.object({
   nome: texto("Informe o nome."),
-  tipo: z.enum(["despesa", "receita"], { errorMap: () => ({ message: "Selecione o tipo." }) }),
+  tipo: z.enum(["despesa", "receita"], { error: "Selecione o tipo." }),
 })
 
 export async function salvarCategoria(_: Resultado | null, formData: FormData): Promise<Resultado> {

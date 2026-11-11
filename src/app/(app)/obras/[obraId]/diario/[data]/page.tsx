@@ -71,7 +71,7 @@ export default async function PaginaDiario({ params }: { params: Promise<{ obraI
     supabase.from("diario_ocorrencias").select("*").eq("diario_id", diario.id).order("hora", { nullsFirst: false }).order("criado_em"),
     supabase.from("medicoes").select("*, servico:servicos(codigo, descricao, unidade)").eq("diario_id", diario.id).order("criado_em"),
     supabase.from("profissionais").select("id, nome, funcao").eq("ativo", true).order("nome"),
-    supabase.from("materiais").select("id, descricao, unidade").eq("ativo", true).order("descricao"),
+    supabase.from("v_materiais_basico").select("id, descricao, unidade").eq("ativo", true).order("descricao"),
     supabase.from("equipamentos").select("id, descricao, identificacao").eq("ativo", true).order("descricao"),
     supabase.rpc("progresso_servicos", { p_obra: obra.id }),
   ])

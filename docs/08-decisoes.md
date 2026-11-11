@@ -54,4 +54,5 @@
 | 11/11/2026 | 14 | `getObra` busca o nome do cliente em `v_pessoas_basico` quando o perfil não lê `pessoas`. | Campo via "Sem cliente". |
 | 11/11/2026 | 17 | Medição de diário: `obra_id` é enviado no insert (o trigger confirma pela obra do serviço). | Tipagem gerada exige a coluna. |
 | 11/11/2026 | testes | Links de convite e recuperação passam a usar `token_hash` validado no servidor (`/auth/verificar`) com templates em português (`supabase/templates`); validade 24 h. | Links PKCE só funcionavam no mesmo navegador; e-mails vinham em inglês; convite de 1 h é curto para uso real. |
+| 11/11/2026 | segurança | Revisão de segurança: Next 15.5.29/React 19.1.10, zod 4, migration 0009 (anon sem acesso, `sessao_interna()`, materiais só para quem vê R$), CSP/HSTS, redirecionamento seguro, CSV sem fórmulas. Detalhes em `docs/10-seguranca.md`. | Pedido antes do deploy. |
 

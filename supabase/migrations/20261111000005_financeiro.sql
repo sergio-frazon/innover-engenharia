@@ -111,7 +111,7 @@ security definer
 set search_path = ''
 as $$
 begin
-  if auth.uid() is not null and not public.pode_editar_financeiro_obra(p_obra) then
+  if not public.sessao_interna() and not public.pode_editar_financeiro_obra(p_obra) then
     perform public.erro('Você não tem permissão para lançamentos financeiros desta obra.');
   end if;
 end;
@@ -142,7 +142,7 @@ declare
   v_tipo_categoria text;
   v_pessoa record;
 begin
-  if tg_op = 'UPDATE' and auth.uid() is not null and not public.via_rpc() then
+  if tg_op = 'UPDATE' and not public.sessao_interna() and not public.via_rpc() then
     if new.cancelado is distinct from old.cancelado or new.valor_total is distinct from old.valor_total
        or new.tipo is distinct from old.tipo then
       perform public.erro('Use as ações de cancelar ou alterar parcelas para mudar valor, tipo ou situação.');
@@ -199,7 +199,7 @@ language plpgsql
 set search_path = ''
 as $$
 begin
-  if auth.uid() is not null and not public.via_rpc() then
+  if not public.sessao_interna() and not public.via_rpc() then
     perform public.erro('Use a ação de alterar parcelas do lançamento.');
   end if;
   return case when tg_op = 'DELETE' then old else new end;
@@ -220,13 +220,13 @@ declare
   v_pago numeric;
 begin
   if tg_op = 'DELETE' then
-    if auth.uid() is not null then
+    if not public.sessao_interna() then
       perform public.erro('Pagamentos não são excluídos. Use a opção de estornar.');
     end if;
     return old;
   end if;
 
-  if tg_op = 'UPDATE' and auth.uid() is not null and not public.via_rpc() then
+  if tg_op = 'UPDATE' and not public.sessao_interna() and not public.via_rpc() then
     if row(new.parcela_id, new.data_pagamento, new.valor, new.juros_multa, new.desconto, new.forma, new.estornada)
        is distinct from row(old.parcela_id, old.data_pagamento, old.valor, old.juros_multa, old.desconto, old.forma, old.estornada) then
       perform public.erro('Pagamentos registrados não podem ser alterados. Estorne e registre novamente.');
