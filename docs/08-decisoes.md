@@ -41,3 +41,16 @@
 ## Registro durante a execução
 
 <!-- O Claude acrescenta aqui qualquer escolha feita durante a implementação que não estava nos documentos. Formato: data · passo · decisão · motivo -->
+
+| Data | Passo | Decisão | Motivo |
+|---|---|---|---|
+| 11/11/2026 | 3–6 | `ligar_via_rpc()`/`desligar_via_rpc()`: a liberação para mudar `status` é desligada ao fim de cada RPC. | Os testes mostraram que, ligada até o fim da transação, ela liberaria mudanças diretas posteriores na mesma transação. |
+| 11/11/2026 | 7 | Na situação da parcela, `parcial` tem precedência sobre `vencida` (como em R-FIN-02); a tela pinta a data de vermelho e o alerta de "conta vencida" usa o vencimento, não a situação. | Parcela paga em parte e vencida não pode sumir dos alertas. |
+| 11/11/2026 | 8 | Progresso por funções `security definer` sem colunas em R$ (`progresso_servicos/etapas/obras`) e alertas na view `v_alertas`. | Campo vê avanço sem ver valores. |
+| 11/11/2026 | 16 | Nova migration `0008`: RPC `salvar_atividade_cronograma` grava a atividade, os sucessores empurrados e as dependências numa só transação (security invoker). | Com várias chamadas separadas, a revalidação de dependências falharia no meio do caminho. |
+| 11/11/2026 | 15 | Itens do orçamento são editados em diálogo (não "inline" na tabela). | Mais confiável no celular e com validação por campo; mesma funcionalidade. |
+| 11/11/2026 | 11 | Convite chega com os tokens no fragmento da URL; `/auth/confirmar` envia os tokens a `/auth/sessao`, que grava a sessão pelo servidor. | O cliente do navegador disputava o processamento do link e travava. |
+| 11/11/2026 | 14 | Páginas sem permissão mostram a tela 404, mas o código HTTP pode ser 200 (streaming do Next). Verificado que nenhum dado vaza no conteúdo. | Limitação do streaming do App Router; a segurança real é o RLS. |
+| 11/11/2026 | 14 | `getObra` busca o nome do cliente em `v_pessoas_basico` quando o perfil não lê `pessoas`. | Campo via "Sem cliente". |
+| 11/11/2026 | 17 | Medição de diário: `obra_id` é enviado no insert (o trigger confirma pela obra do serviço). | Tipagem gerada exige a coluna. |
+
