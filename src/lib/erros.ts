@@ -1,4 +1,4 @@
-type ErroBanco = { code?: string; message: string; details?: string | null; hint?: string | null }
+export type ErroBanco = { code?: string; message: string; details?: string | null; hint?: string | null }
 
 /** Traduz um erro do Supabase/Postgres para mensagem ao usuário. */
 export function mensagemDeErro(error: ErroBanco | null | undefined): string {

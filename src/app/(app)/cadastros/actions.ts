@@ -4,11 +4,14 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
 import { booleano, falhaValidacao, numeroOpcional, texto, textoOpcional, uuidOpcional, type Resultado } from "@/lib/acoes"
-import { mensagemDeErro } from "@/lib/erros"
+import { falha } from "@/lib/acao-servidor"
 import { SEM_PERMISSAO, usuarioDaAcao } from "@/lib/auth"
 import { cnpjValido, cpfValido } from "@/lib/documentos-br"
 import { somenteDigitos } from "@/lib/format"
 import type { Papel } from "@/lib/rotulos"
+
+// Cadastros básicos: todos seguem o mesmo fluxo (validar → gravar → atualizar a lista)
+// e nunca são apagados, só desativados (regra 3 do CLAUDE.md).
 
 type Tabela = "pessoas" | "profissionais" | "materiais" | "equipamentos" | "categorias_financeiras"
 
@@ -28,6 +31,7 @@ const PAPEIS_EDICAO: Record<Tabela, Papel[]> = {
   categorias_financeiras: ["admin", "financeiro"],
 }
 
+/** Grava o cadastro em nome do usuário logado; o RLS confirma a permissão no banco. */
 async function gravar(tabela: Tabela, id: string | null, dados: Record<string, unknown>): Promise<Resultado> {
   if (!(await usuarioDaAcao(...PAPEIS_EDICAO[tabela]))) return SEM_PERMISSAO
   const supabase = await createClient()
@@ -40,7 +44,7 @@ async function gravar(tabela: Tabela, id: string | null, dados: Record<string, u
     if (error.code === "23505") {
       return { ok: false, erro: tabela === "pessoas" ? "Já existe um cadastro com este CPF/CNPJ." : "Já existe um cadastro com esta descrição." }
     }
-    return { ok: false, erro: mensagemDeErro(error) }
+    return falha(error)
   }
   revalidatePath(ROTA[tabela])
   return { ok: true }
@@ -50,12 +54,20 @@ async function alternar(tabela: Tabela, id: string, ativo: boolean): Promise<Res
   if (!(await usuarioDaAcao(...PAPEIS_EDICAO[tabela]))) return SEM_PERMISSAO
   const supabase = await createClient()
   const { error } = await supabase.from(tabela).update({ ativo } as never).eq("id", id)
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
+  if (error) return falha(error)
   revalidatePath(ROTA[tabela])
   return { ok: true }
 }
 
 const idSchema = z.object({ id: uuidOpcional })
+
+/** Valida o formulário com o schema do cadastro e grava (insert sem `id`, update com `id`). */
+function salvar(tabela: Tabela, schema: z.ZodType<Record<string, unknown>>, formData: FormData): Promise<Resultado> | Resultado {
+  const obj = Object.fromEntries(formData)
+  const dados = schema.safeParse(obj)
+  if (!dados.success) return falhaValidacao(dados.error)
+  return gravar(tabela, idSchema.parse(obj).id, dados.data)
+}
 
 // Pessoas -------------------------------------------------------------------
 
@@ -84,10 +96,7 @@ const pessoaSchema = z
   })
 
 export async function salvarPessoa(_: Resultado | null, formData: FormData): Promise<Resultado> {
-  const obj = Object.fromEntries(formData)
-  const dados = pessoaSchema.safeParse(obj)
-  if (!dados.success) return falhaValidacao(dados.error)
-  return gravar("pessoas", idSchema.parse(obj).id, dados.data)
+  return salvar("pessoas", pessoaSchema, formData)
 }
 export async function alternarPessoa(id: string, ativo: boolean) {
   return alternar("pessoas", id, ativo)
@@ -111,10 +120,7 @@ const profissionalSchema = z
   .transform((d) => ({ ...d, empresa_id: d.vinculo === "proprio" ? null : d.empresa_id }))
 
 export async function salvarProfissional(_: Resultado | null, formData: FormData): Promise<Resultado> {
-  const obj = Object.fromEntries(formData)
-  const dados = profissionalSchema.safeParse(obj)
-  if (!dados.success) return falhaValidacao(dados.error)
-  return gravar("profissionais", idSchema.parse(obj).id, dados.data)
+  return salvar("profissionais", profissionalSchema, formData)
 }
 export async function alternarProfissional(id: string, ativo: boolean) {
   return alternar("profissionais", id, ativo)
@@ -129,10 +135,7 @@ const materialSchema = z.object({
 })
 
 export async function salvarMaterial(_: Resultado | null, formData: FormData): Promise<Resultado> {
-  const obj = Object.fromEntries(formData)
-  const dados = materialSchema.safeParse(obj)
-  if (!dados.success) return falhaValidacao(dados.error)
-  return gravar("materiais", idSchema.parse(obj).id, dados.data)
+  return salvar("materiais", materialSchema, formData)
 }
 export async function alternarMaterial(id: string, ativo: boolean) {
   return alternar("materiais", id, ativo)
@@ -147,10 +150,7 @@ const equipamentoSchema = z.object({
 })
 
 export async function salvarEquipamento(_: Resultado | null, formData: FormData): Promise<Resultado> {
-  const obj = Object.fromEntries(formData)
-  const dados = equipamentoSchema.safeParse(obj)
-  if (!dados.success) return falhaValidacao(dados.error)
-  return gravar("equipamentos", idSchema.parse(obj).id, dados.data)
+  return salvar("equipamentos", equipamentoSchema, formData)
 }
 export async function alternarEquipamento(id: string, ativo: boolean) {
   return alternar("equipamentos", id, ativo)
@@ -164,10 +164,7 @@ const categoriaSchema = z.object({
 })
 
 export async function salvarCategoria(_: Resultado | null, formData: FormData): Promise<Resultado> {
-  const obj = Object.fromEntries(formData)
-  const dados = categoriaSchema.safeParse(obj)
-  if (!dados.success) return falhaValidacao(dados.error)
-  return gravar("categorias_financeiras", idSchema.parse(obj).id, dados.data)
+  return salvar("categorias_financeiras", categoriaSchema, formData)
 }
 export async function alternarCategoria(id: string, ativo: boolean) {
   return alternar("categorias_financeiras", id, ativo)

@@ -1,14 +1,14 @@
-import { NextResponse, type NextRequest } from "next/server"
-import { getUsuario } from "@/lib/auth"
+import type { NextRequest } from "next/server"
+import { usuarioDaAcao } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
-import { gerarCsv, respostaCsv } from "@/lib/csv"
+import { gerarCsv, naoEncontrado, respostaCsv } from "@/lib/csv"
 import { data as fmtData } from "@/lib/format"
 import { STATUS_MEDICAO } from "@/lib/rotulos"
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ obraId: string }> }) {
   const { obraId } = await params
-  const usuario = await getUsuario()
-  if (!usuario?.ativo || !["admin", "gestor", "campo"].includes(usuario.papel)) return new NextResponse(null, { status: 404 })
+  const usuario = await usuarioDaAcao("admin", "gestor", "campo")
+  if (!usuario) return naoEncontrado()
 
   const f = request.nextUrl.searchParams
   const supabase = await createClient()

@@ -3,6 +3,7 @@
 
 export type ParcelaPlano = { vencimento: string; valor: number }
 
+/** Soma meses mantendo o dia; se o mês não tiver o dia (31 → fevereiro), usa o último dia do mês. */
 function somarMeses(iso: string, meses: number): string {
   const [a, m, d] = iso.split("-").map(Number)
   const alvo = new Date(Date.UTC(a, m - 1 + meses, 1))
@@ -11,6 +12,7 @@ function somarMeses(iso: string, meses: number): string {
   return alvo.toISOString().slice(0, 10)
 }
 
+/** Divide `total` em parcelas iguais a cada `intervaloMeses`, a partir do 1º vencimento. */
 export function dividirParcelas(total: number, quantidade: number, primeiroVencimento: string, intervaloMeses = 1): ParcelaPlano[] {
   if (!Number.isFinite(total) || total <= 0) return []
   const n = Math.max(1, Math.floor(quantidade))
@@ -22,6 +24,7 @@ export function dividirParcelas(total: number, quantidade: number, primeiroVenci
   }))
 }
 
+/** Soma em centavos para não acumular erro de ponto flutuante. */
 export function somaParcelas(parcelas: { valor: number }[]): number {
   return parcelas.reduce((acc, p) => acc + Math.round(p.valor * 100), 0) / 100
 }

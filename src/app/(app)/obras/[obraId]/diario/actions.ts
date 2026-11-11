@@ -1,6 +1,5 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
@@ -16,43 +15,38 @@ import {
   uuidOpcional,
   type Resultado,
 } from "@/lib/acoes"
-import { mensagemDeErro } from "@/lib/erros"
+import { EQUIPE_DA_OBRA, executar, falha, GESTAO, revalidarObra } from "@/lib/acao-servidor"
 import { SEM_PERMISSAO, usuarioDaAcao } from "@/lib/auth"
 
-const PAPEIS = ["admin", "gestor", "campo"] as const
+// O diário alimenta o avanço da obra e os alertas de "diário pendente"
+const revalidar = (obraId: string) => revalidarObra(obraId, { resumos: true })
 
-function revalidar(obraId: string) {
-  revalidatePath(`/obras/${obraId}`, "layout")
-  revalidatePath("/painel")
-  revalidatePath("/alertas")
-}
-
-// R-DIA-01 / R-DIA-08: cria o diário do dia, trazendo a equipe do último diário
+// R-DIA-01 / R-DIA-08: cria o diário do dia, trazendo a equipe e o horário do último diário
 export async function criarDiario(obraId: string, data: string): Promise<Resultado> {
-  if (!(await usuarioDaAcao(...PAPEIS))) return SEM_PERMISSAO
+  if (!(await usuarioDaAcao(...EQUIPE_DA_OBRA))) return SEM_PERMISSAO
   if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) return { ok: false, erro: "Data inválida." }
   const supabase = await createClient()
 
-  const { data: novo, error } = await supabase.from("diarios").insert({ obra_id: obraId, data }).select("id").single()
-  if (error) {
-    if (error.code === "23505") redirect(`/obras/${obraId}/diario/${data}`)
-    return { ok: false, erro: mensagemDeErro(error) }
-  }
-
+  // Último diário anterior, já com a equipe (uma consulta só)
   const { data: ultimo } = await supabase
     .from("diarios")
-    .select("id, hora_inicio, hora_fim")
+    .select("hora_inicio, hora_fim, equipe:diario_equipe(profissional_id, nome, funcao, quantidade, horas)")
     .eq("obra_id", obraId)
     .lt("data", data)
     .order("data", { ascending: false })
     .limit(1)
     .maybeSingle()
-  if (ultimo) {
-    const { data: equipe } = await supabase.from("diario_equipe").select("profissional_id, nome, funcao, quantidade, horas").eq("diario_id", ultimo.id)
-    if (equipe?.length) await supabase.from("diario_equipe").insert(equipe.map((e) => ({ ...e, diario_id: novo.id })))
-    if (ultimo.hora_inicio || ultimo.hora_fim) {
-      await supabase.from("diarios").update({ hora_inicio: ultimo.hora_inicio, hora_fim: ultimo.hora_fim }).eq("id", novo.id)
-    }
+
+  const { data: novo, error } = await supabase
+    .from("diarios")
+    .insert({ obra_id: obraId, data, hora_inicio: ultimo?.hora_inicio ?? null, hora_fim: ultimo?.hora_fim ?? null })
+    .select("id")
+    .single()
+  if (error?.code === "23505") redirect(`/obras/${obraId}/diario/${data}`) // já existe: abre o existente
+  if (error) return falha(error)
+
+  if (ultimo?.equipe.length) {
+    await supabase.from("diario_equipe").insert(ultimo.equipe.map((e) => ({ ...e, diario_id: novo.id })))
   }
   revalidar(obraId)
   redirect(`/obras/${obraId}/diario/${data}`)
@@ -71,7 +65,7 @@ const cabecalhoSchema = z.object({
 })
 
 export async function salvarCabecalhoDiario(_: Resultado | null, formData: FormData): Promise<Resultado> {
-  if (!(await usuarioDaAcao(...PAPEIS))) return SEM_PERMISSAO
+  if (!(await usuarioDaAcao(...EQUIPE_DA_OBRA))) return SEM_PERMISSAO
   const dados = cabecalhoSchema.safeParse(Object.fromEntries(formData))
   if (!dados.success) return falhaValidacao(dados.error)
   const { id, obra_id, ...campos } = dados.data
@@ -80,7 +74,7 @@ export async function salvarCabecalhoDiario(_: Resultado | null, formData: FormD
   }
   const supabase = await createClient()
   const { error } = await supabase.from("diarios").update(campos).eq("id", id)
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
+  if (error) return falha(error)
   revalidar(obra_id)
   return { ok: true, mensagem: "Diário salvo." }
 }
@@ -131,24 +125,21 @@ const SCHEMAS: Record<TabelaFilha, z.ZodTypeAny> = {
   diario_ocorrencias: ocorrenciaSchema,
 }
 
+/** Adiciona uma linha (equipe, material, equipamento ou ocorrência) ao diário. */
 export async function adicionarLinhaDiario(tabela: TabelaFilha, obraId: string, _: Resultado | null, formData: FormData): Promise<Resultado> {
-  if (!(await usuarioDaAcao(...PAPEIS))) return SEM_PERMISSAO
+  if (!(await usuarioDaAcao(...EQUIPE_DA_OBRA))) return SEM_PERMISSAO
   const dados = SCHEMAS[tabela].safeParse(Object.fromEntries(formData))
   if (!dados.success) return falhaValidacao(dados.error)
   const supabase = await createClient()
+  // O schema de cada tabela (SCHEMAS) já garante as colunas; o cast só une os tipos das quatro tabelas
   const { error } = await supabase.from(tabela).insert(dados.data as never)
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
+  if (error) return falha(error)
   revalidar(obraId)
   return { ok: true }
 }
 
 export async function removerLinhaDiario(tabela: TabelaFilha, obraId: string, id: string): Promise<Resultado> {
-  if (!(await usuarioDaAcao(...PAPEIS))) return SEM_PERMISSAO
-  const supabase = await createClient()
-  const { error } = await supabase.from(tabela).delete().eq("id", id)
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
-  revalidar(obraId)
-  return { ok: true }
+  return executar({ papeis: EQUIPE_DA_OBRA, operacao: (sb) => sb.from(tabela).delete().eq("id", id), revalidar: () => revalidar(obraId) })
 }
 
 // Serviços executados (medições do diário) ----------------------------------------
@@ -164,68 +155,67 @@ const medicaoDiarioSchema = z.object({
 })
 
 export async function salvarMedicaoDiario(obraId: string, _: Resultado | null, formData: FormData): Promise<Resultado> {
-  if (!(await usuarioDaAcao(...PAPEIS))) return SEM_PERMISSAO
+  if (!(await usuarioDaAcao(...EQUIPE_DA_OBRA))) return SEM_PERMISSAO
   const dados = medicaoDiarioSchema.safeParse(Object.fromEntries(formData))
   if (!dados.success) return falhaValidacao(dados.error)
   const { id, ...campos } = dados.data
   const supabase = await createClient()
+  // A medição do diário vale para o dia do diário (período de um dia só)
   const { data: diario } = await supabase.from("diarios").select("data").eq("id", campos.diario_id).single()
   if (!diario) return { ok: false, erro: "Diário não encontrado." }
-  const registro = { ...campos, obra_id: obraId, periodo_inicio: diario.data, periodo_fim: diario.data }
+  const { quantidade, local, observacao, justificativa_excesso } = campos
   const { error } = id
-    ? await supabase.from("medicoes").update({ quantidade: registro.quantidade, local: registro.local, observacao: registro.observacao, justificativa_excesso: registro.justificativa_excesso }).eq("id", id)
-    : await supabase.from("medicoes").insert(registro)
-  if (error) {
-    if (error.code === "23505") return { ok: false, erro: "Este serviço já foi lançado neste diário. Edite o lançamento existente." }
-    return { ok: false, erro: mensagemDeErro(error) }
-  }
+    ? await supabase.from("medicoes").update({ quantidade, local, observacao, justificativa_excesso }).eq("id", id)
+    : await supabase.from("medicoes").insert({ ...campos, obra_id: obraId, periodo_inicio: diario.data, periodo_fim: diario.data })
+  if (error?.code === "23505") return { ok: false, erro: "Este serviço já foi lançado neste diário. Edite o lançamento existente." }
+  if (error) return falha(error)
   revalidar(obraId)
   return { ok: true, mensagem: id ? "Serviço atualizado." : "Serviço lançado." }
 }
 
 export async function removerMedicaoDiario(obraId: string, id: string): Promise<Resultado> {
-  if (!(await usuarioDaAcao(...PAPEIS))) return SEM_PERMISSAO
-  const supabase = await createClient()
-  const { error } = await supabase.from("medicoes").delete().eq("id", id)
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
-  revalidar(obraId)
-  return { ok: true, mensagem: "Serviço removido do diário." }
+  return executar({
+    papeis: EQUIPE_DA_OBRA,
+    operacao: (sb) => sb.from("medicoes").delete().eq("id", id),
+    mensagem: "Serviço removido do diário.",
+    revalidar: () => revalidar(obraId),
+  })
 }
 
 // Fluxo -----------------------------------------------------------------------------
 
 export async function enviarDiario(obraId: string, id: string): Promise<Resultado> {
-  if (!(await usuarioDaAcao(...PAPEIS))) return SEM_PERMISSAO
-  const supabase = await createClient()
-  const { error } = await supabase.rpc("enviar_diario", { p_diario: id })
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
-  revalidar(obraId)
-  return { ok: true, mensagem: "Diário enviado para conferência." }
+  return executar({
+    papeis: EQUIPE_DA_OBRA,
+    operacao: (sb) => sb.rpc("enviar_diario", { p_diario: id }),
+    mensagem: "Diário enviado para conferência.",
+    revalidar: () => revalidar(obraId),
+  })
 }
 
 export async function aprovarDiario(obraId: string, id: string): Promise<Resultado> {
-  if (!(await usuarioDaAcao("admin", "gestor"))) return SEM_PERMISSAO
-  const supabase = await createClient()
-  const { error } = await supabase.rpc("aprovar_diario", { p_diario: id })
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
-  revalidar(obraId)
-  return { ok: true, mensagem: "Diário aprovado. O avanço da obra foi atualizado." }
+  return executar({
+    papeis: GESTAO,
+    operacao: (sb) => sb.rpc("aprovar_diario", { p_diario: id }),
+    mensagem: "Diário aprovado. O avanço da obra foi atualizado.",
+    revalidar: () => revalidar(obraId),
+  })
 }
 
 export async function solicitarCorrecaoDiario(obraId: string, id: string, comentario: string): Promise<Resultado> {
-  if (!(await usuarioDaAcao("admin", "gestor"))) return SEM_PERMISSAO
-  const supabase = await createClient()
-  const { error } = await supabase.rpc("solicitar_correcao_diario", { p_diario: id, p_comentario: comentario })
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
-  revalidar(obraId)
-  return { ok: true, mensagem: "Correção solicitada." }
+  return executar({
+    papeis: GESTAO,
+    operacao: (sb) => sb.rpc("solicitar_correcao_diario", { p_diario: id, p_comentario: comentario }),
+    mensagem: "Correção solicitada.",
+    revalidar: () => revalidar(obraId),
+  })
 }
 
 export async function excluirDiario(obraId: string, id: string): Promise<Resultado> {
-  if (!(await usuarioDaAcao(...PAPEIS))) return SEM_PERMISSAO
+  if (!(await usuarioDaAcao(...EQUIPE_DA_OBRA))) return SEM_PERMISSAO
   const supabase = await createClient()
   const { error } = await supabase.from("diarios").delete().eq("id", id)
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
+  if (error) return falha(error)
   revalidar(obraId)
   redirect(`/obras/${obraId}/diario`)
 }

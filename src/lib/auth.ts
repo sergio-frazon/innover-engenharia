@@ -33,6 +33,7 @@ export async function exigirPapel(...papeis: Papel[]): Promise<Usuario> {
   return usuario
 }
 
+/** O usuário tem um dos papéis? (para mostrar/esconder partes da tela) */
 export function temPapel(usuario: Pick<Usuario, "papel">, ...papeis: Papel[]): boolean {
   return papeis.includes(usuario.papel)
 }
@@ -45,4 +46,5 @@ export async function usuarioDaAcao(...papeis: Papel[]): Promise<Usuario | null>
   return usuario
 }
 
+/** Resultado padrão quando a action é chamada por quem não tem o papel exigido. */
 export const SEM_PERMISSAO = { ok: false as const, erro: "Você não tem permissão para esta ação." }

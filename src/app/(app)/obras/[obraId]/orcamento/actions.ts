@@ -1,42 +1,41 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
 import { falhaValidacao, numeroBR, texto, uuid, uuidOpcional, type Resultado } from "@/lib/acoes"
-import { mensagemDeErro } from "@/lib/erros"
+import { executar, falha, GESTAO, revalidarObra } from "@/lib/acao-servidor"
 import { SEM_PERMISSAO, usuarioDaAcao } from "@/lib/auth"
 
-function revalidar(obraId: string) {
-  revalidatePath(`/obras/${obraId}`, "layout")
-}
+// Versões (R-ORC): rascunho → aprovada → substituída. As regras ficam nas RPCs do banco.
 
 export async function criarVersaoOrcamento(obraId: string, descricao: string): Promise<Resultado> {
-  if (!(await usuarioDaAcao("admin", "gestor"))) return SEM_PERMISSAO
-  const supabase = await createClient()
-  const { data, error } = await supabase.rpc("criar_revisao_orcamento", { p_obra: obraId, p_descricao: descricao || undefined })
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
-  revalidar(obraId)
-  return { ok: true, id: data, mensagem: "Rascunho criado." }
+  return executar({
+    papeis: GESTAO,
+    operacao: (sb) => sb.rpc("criar_revisao_orcamento", { p_obra: obraId, p_descricao: descricao || undefined }),
+    mensagem: "Rascunho criado.",
+    revalidar: () => revalidarObra(obraId),
+  })
 }
 
 export async function aprovarOrcamento(obraId: string, versaoId: string): Promise<Resultado> {
-  if (!(await usuarioDaAcao("admin", "gestor"))) return SEM_PERMISSAO
-  const supabase = await createClient()
-  const { error } = await supabase.rpc("aprovar_orcamento", { p_versao: versaoId })
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
-  revalidar(obraId)
-  return { ok: true, mensagem: "Orçamento aprovado." }
+  return executar({
+    papeis: GESTAO,
+    operacao: (sb) => sb.rpc("aprovar_orcamento", { p_versao: versaoId }),
+    mensagem: "Orçamento aprovado.",
+    revalidar: () => revalidarObra(obraId),
+  })
 }
 
 export async function descartarRascunhoOrcamento(obraId: string, versaoId: string): Promise<Resultado> {
-  if (!(await usuarioDaAcao("admin", "gestor"))) return SEM_PERMISSAO
-  const supabase = await createClient()
-  const { error } = await supabase.rpc("descartar_rascunho_orcamento", { p_versao: versaoId })
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
-  revalidar(obraId)
-  return { ok: true, mensagem: "Rascunho descartado." }
+  return executar({
+    papeis: GESTAO,
+    operacao: (sb) => sb.rpc("descartar_rascunho_orcamento", { p_versao: versaoId }),
+    mensagem: "Rascunho descartado.",
+    revalidar: () => revalidarObra(obraId),
+  })
 }
+
+// Itens ------------------------------------------------------------------------
 
 const itemSchema = z.object({
   id: uuidOpcional,
@@ -48,44 +47,45 @@ const itemSchema = z.object({
   descricao: texto("Informe a descrição."),
   unidade: texto("Informe a unidade."),
   quantidade: numeroBR({ min: 0, mensagem: "Informe a quantidade." }),
+  // Dinheiro é numeric(14,2): rejeita frações de centavo em vez de arredondar sem avisar
   valor_unitario: numeroBR({ min: 0, mensagem: "Informe o valor unitário." }).refine(
-    (v) => Math.round(v * 100) === v * 100 || Math.abs(Math.round(v * 100) - v * 100) < 1e-6,
+    (v) => Math.abs(Math.round(v * 100) - v * 100) < 1e-6,
     "Use no máximo 2 casas decimais (centavos).",
   ),
 })
 
 export async function salvarItemOrcamento(_: Resultado | null, formData: FormData): Promise<Resultado> {
-  if (!(await usuarioDaAcao("admin", "gestor"))) return SEM_PERMISSAO
+  if (!(await usuarioDaAcao(...GESTAO))) return SEM_PERMISSAO
   const dados = itemSchema.safeParse(Object.fromEntries(formData))
   if (!dados.success) return falhaValidacao(dados.error)
   const { id, obra_id, ...campos } = dados.data
   const supabase = await createClient()
   const { error } = id ? await supabase.from("orcamento_itens").update(campos).eq("id", id) : await supabase.from("orcamento_itens").insert(campos)
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
-  revalidar(obra_id)
+  if (error) return falha(error)
+  revalidarObra(obra_id)
   return { ok: true, mensagem: id ? "Item atualizado." : "Item adicionado." }
 }
 
 export async function duplicarItemOrcamento(obraId: string, itemId: string): Promise<Resultado> {
-  if (!(await usuarioDaAcao("admin", "gestor"))) return SEM_PERMISSAO
+  if (!(await usuarioDaAcao(...GESTAO))) return SEM_PERMISSAO
   const supabase = await createClient()
-  const { data: item, error: e1 } = await supabase
+  const { data: item, error: erroLeitura } = await supabase
     .from("orcamento_itens")
     .select("versao_id, servico_id, natureza, descricao, material_id, unidade, quantidade, valor_unitario, ordem")
     .eq("id", itemId)
     .single()
-  if (e1 || !item) return { ok: false, erro: mensagemDeErro(e1) }
+  if (erroLeitura || !item) return falha(erroLeitura)
   const { error } = await supabase.from("orcamento_itens").insert({ ...item, descricao: `${item.descricao} (cópia)`, ordem: item.ordem + 1 })
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
-  revalidar(obraId)
+  if (error) return falha(error)
+  revalidarObra(obraId)
   return { ok: true, mensagem: "Item duplicado." }
 }
 
 export async function removerItemOrcamento(obraId: string, itemId: string): Promise<Resultado> {
-  if (!(await usuarioDaAcao("admin", "gestor"))) return SEM_PERMISSAO
-  const supabase = await createClient()
-  const { error } = await supabase.from("orcamento_itens").delete().eq("id", itemId)
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
-  revalidar(obraId)
-  return { ok: true, mensagem: "Item removido." }
+  return executar({
+    papeis: GESTAO,
+    operacao: (sb) => sb.from("orcamento_itens").delete().eq("id", itemId),
+    mensagem: "Item removido.",
+    revalidar: () => revalidarObra(obraId),
+  })
 }

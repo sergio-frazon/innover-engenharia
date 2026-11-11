@@ -5,8 +5,10 @@ import { redirect } from "next/navigation"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
 import { dataOpcional, falhaValidacao, texto, textoOpcional, uuid, uuidOpcional, type Resultado } from "@/lib/acoes"
-import { mensagemDeErro } from "@/lib/erros"
+import { falha, GESTAO, revalidarObra } from "@/lib/acao-servidor"
 import { SEM_PERMISSAO, usuarioDaAcao } from "@/lib/auth"
+
+const CODIGO_EM_USO: Resultado = { ok: false, erro: "Já existe uma obra com este código.", campos: { codigo: "Código em uso." } }
 
 const obraSchema = z
   .object({
@@ -41,27 +43,26 @@ const edicaoSchema = obraSchema.and(
 )
 
 export async function criarObra(_: Resultado | null, formData: FormData): Promise<Resultado> {
-  if (!(await usuarioDaAcao("admin", "gestor"))) return SEM_PERMISSAO
+  if (!(await usuarioDaAcao(...GESTAO))) return SEM_PERMISSAO
   const dados = obraSchema.safeParse(Object.fromEntries(formData))
   if (!dados.success) return falhaValidacao(dados.error)
 
   const supabase = await createClient()
+  // Sem código, o banco gera o próximo OB-AAAA-NNN (R-OBR-01)
   const { codigo, ...resto } = dados.data
   const { data, error } = await supabase
     .from("obras")
     .insert({ ...resto, codigo: codigo ?? "" })
     .select("id")
     .single()
-  if (error) {
-    if (error.code === "23505") return { ok: false, erro: "Já existe uma obra com este código.", campos: { codigo: "Código em uso." } }
-    return { ok: false, erro: mensagemDeErro(error) }
-  }
+  if (error?.code === "23505") return CODIGO_EM_USO
+  if (error) return falha(error)
   revalidatePath("/obras")
   redirect(`/obras/${data.id}`)
 }
 
 export async function editarObra(_: Resultado | null, formData: FormData): Promise<Resultado> {
-  if (!(await usuarioDaAcao("admin", "gestor"))) return SEM_PERMISSAO
+  if (!(await usuarioDaAcao(...GESTAO))) return SEM_PERMISSAO
   const dados = edicaoSchema.safeParse(Object.fromEntries(formData))
   if (!dados.success) return falhaValidacao(dados.error)
 
@@ -71,35 +72,35 @@ export async function editarObra(_: Resultado | null, formData: FormData): Promi
     .from("obras")
     .update({ ...resto, ...(codigo ? { codigo } : {}) })
     .eq("id", id)
-  if (error) {
-    if (error.code === "23505") return { ok: false, erro: "Já existe uma obra com este código.", campos: { codigo: "Código em uso." } }
-    return { ok: false, erro: mensagemDeErro(error) }
-  }
-  revalidatePath(`/obras/${id}`, "layout")
+  if (error?.code === "23505") return CODIGO_EM_USO
+  if (error) return falha(error)
+  revalidarObra(id)
   revalidatePath("/obras")
   return { ok: true, mensagem: "Obra atualizada." }
 }
 
 export async function adicionarMembro(obraId: string, perfilId: string): Promise<Resultado> {
-  if (!(await usuarioDaAcao("admin", "gestor"))) return SEM_PERMISSAO
+  if (!(await usuarioDaAcao(...GESTAO))) return SEM_PERMISSAO
   const supabase = await createClient()
   const { error } = await supabase.from("obra_membros").insert({ obra_id: obraId, perfil_id: perfilId })
-  if (error) return { ok: false, erro: error.code === "23505" ? "Esta pessoa já é membro da obra." : mensagemDeErro(error) }
-  revalidatePath(`/obras/${obraId}`, "layout")
+  if (error?.code === "23505") return { ok: false, erro: "Esta pessoa já é membro da obra." }
+  if (error) return falha(error)
+  revalidarObra(obraId)
   return { ok: true, mensagem: "Membro adicionado." }
 }
 
 export async function removerMembro(obraId: string, perfilId: string): Promise<Resultado> {
-  if (!(await usuarioDaAcao("admin", "gestor"))) return SEM_PERMISSAO
+  if (!(await usuarioDaAcao(...GESTAO))) return SEM_PERMISSAO
   const supabase = await createClient()
   const { error, count } = await supabase
     .from("obra_membros")
     .delete({ count: "exact" })
     .eq("obra_id", obraId)
     .eq("perfil_id", perfilId)
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
+  if (error) return falha(error)
+  // O RLS filtra em silêncio: 0 linhas = sem permissão para remover este membro
   if (!count) return { ok: false, erro: "Não foi possível remover este membro." }
-  revalidatePath(`/obras/${obraId}`, "layout")
+  revalidarObra(obraId)
   return { ok: true, mensagem: "Membro removido." }
 }
 

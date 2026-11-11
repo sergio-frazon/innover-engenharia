@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { linkDeDownload } from "@/app/(app)/obras/[obraId]/documentos/actions"
 
+/** Botão que pede ao servidor um link assinado de 60 s e abre o download. */
 export function BaixarArquivo({
   bucket,
   caminho,

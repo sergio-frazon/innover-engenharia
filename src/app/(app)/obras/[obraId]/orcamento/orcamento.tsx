@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { BotaoEnviar, Campo, ErroFormulario, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
+import { useAcao } from "@/components/comum/use-acao"
 import { Confirmar } from "@/components/comum/confirmar"
 import { EstadoVazio } from "@/components/comum/pagina"
 import { lerNumero, moeda, numero, numeroParaInput } from "@/lib/format"
@@ -277,15 +278,7 @@ export function ItensOrcamento({
   totalGeral: number
 }) {
   const [dialogo, setDialogo] = useState<{ item?: Item; servicoId?: string } | null>(null)
-  const [pendente, iniciar] = useTransition()
-
-  function executar(p: Promise<{ ok: boolean; erro?: string; mensagem?: string }>) {
-    iniciar(async () => {
-      const r = await p
-      if (r.ok) toast.success(r.mensagem)
-      else toast.error(r.erro)
-    })
-  }
+  const { pendente, executar } = useAcao()
 
   if (etapas.length === 0) {
     return (

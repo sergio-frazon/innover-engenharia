@@ -1,17 +1,14 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
-import { dataISO, falhaValidacao, numeroBR, textoOpcional, uuid, uuidOpcional, type Resultado } from "@/lib/acoes"
+import { booleano, dataISO, falhaValidacao, numeroBR, textoOpcional, uuid, uuidOpcional, type Resultado } from "@/lib/acoes"
+import { EQUIPE_DA_OBRA, executar, falha, GESTAO, revalidarObra } from "@/lib/acao-servidor"
 import { mensagemDeErro } from "@/lib/erros"
 import { SEM_PERMISSAO, usuarioDaAcao } from "@/lib/auth"
 
-function revalidar(obraId: string) {
-  revalidatePath(`/obras/${obraId}`, "layout")
-  revalidatePath("/painel")
-  revalidatePath("/alertas")
-}
+// Medições mexem no avanço da obra, que aparece no painel e nos alertas
+const revalidar = (obraId: string) => revalidarObra(obraId, { resumos: true })
 
 const avulsaSchema = z
   .object({
@@ -24,12 +21,13 @@ const avulsaSchema = z
     local: textoOpcional,
     observacao: textoOpcional,
     justificativa_excesso: textoOpcional,
-    enviar: z.preprocess((v) => v === "on" || v === "true", z.boolean()),
+    enviar: booleano,
   })
   .refine((d) => d.periodo_fim >= d.periodo_inicio, { message: "O fim deve ser depois do início.", path: ["periodo_fim"] })
 
+/** Medição fora do diário: salva como rascunho e, se pedido, já envia para aprovação. */
 export async function salvarMedicaoAvulsa(_: Resultado | null, formData: FormData): Promise<Resultado> {
-  if (!(await usuarioDaAcao("admin", "gestor", "campo"))) return SEM_PERMISSAO
+  if (!(await usuarioDaAcao(...EQUIPE_DA_OBRA))) return SEM_PERMISSAO
   const dados = avulsaSchema.safeParse(Object.fromEntries(formData))
   if (!dados.success) return falhaValidacao(dados.error)
   const { id, enviar, ...campos } = dados.data
@@ -37,15 +35,16 @@ export async function salvarMedicaoAvulsa(_: Resultado | null, formData: FormDat
 
   let medicaoId = id
   if (id) {
+    // Obra e serviço não mudam numa edição
     const { periodo_inicio, periodo_fim, quantidade, local, observacao, justificativa_excesso } = campos
     const { error } = await supabase
       .from("medicoes")
       .update({ periodo_inicio, periodo_fim, quantidade, local, observacao, justificativa_excesso })
       .eq("id", id)
-    if (error) return { ok: false, erro: mensagemDeErro(error) }
+    if (error) return falha(error)
   } else {
     const { data, error } = await supabase.from("medicoes").insert(campos).select("id").single()
-    if (error) return { ok: false, erro: mensagemDeErro(error) }
+    if (error) return falha(error)
     medicaoId = data.id
   }
 
@@ -61,52 +60,52 @@ export async function salvarMedicaoAvulsa(_: Resultado | null, formData: FormDat
 }
 
 export async function enviarMedicao(obraId: string, id: string): Promise<Resultado> {
-  if (!(await usuarioDaAcao("admin", "gestor", "campo"))) return SEM_PERMISSAO
-  const supabase = await createClient()
-  const { error } = await supabase.rpc("enviar_medicao", { p_medicao: id })
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
-  revalidar(obraId)
-  return { ok: true, mensagem: "Medição enviada para aprovação." }
+  return executar({
+    papeis: EQUIPE_DA_OBRA,
+    operacao: (sb) => sb.rpc("enviar_medicao", { p_medicao: id }),
+    mensagem: "Medição enviada para aprovação.",
+    revalidar: () => revalidar(obraId),
+  })
 }
 
+/** Aprovação em lote: cada medição é aprovada à parte, e as que falharem não travam as demais. */
 export async function aprovarMedicoes(obraId: string, ids: string[]): Promise<Resultado> {
-  if (!(await usuarioDaAcao("admin", "gestor"))) return SEM_PERMISSAO
+  if (!(await usuarioDaAcao(...GESTAO))) return SEM_PERMISSAO
   const supabase = await createClient()
   const erros: string[] = []
-  let aprovadas = 0
   for (const id of ids) {
     const { error } = await supabase.rpc("aprovar_medicao", { p_medicao: id })
     if (error) erros.push(mensagemDeErro(error))
-    else aprovadas++
   }
+  const aprovadas = ids.length - erros.length
   revalidar(obraId)
   if (erros.length) return { ok: false, erro: `${aprovadas} aprovada(s). ${erros.length} com problema: ${erros[0]}` }
   return { ok: true, mensagem: aprovadas === 1 ? "Medição aprovada." : `${aprovadas} medições aprovadas.` }
 }
 
 export async function rejeitarMedicao(obraId: string, id: string, comentario: string): Promise<Resultado> {
-  if (!(await usuarioDaAcao("admin", "gestor"))) return SEM_PERMISSAO
-  const supabase = await createClient()
-  const { error } = await supabase.rpc("rejeitar_medicao", { p_medicao: id, p_comentario: comentario })
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
-  revalidar(obraId)
-  return { ok: true, mensagem: "Medição rejeitada." }
+  return executar({
+    papeis: GESTAO,
+    operacao: (sb) => sb.rpc("rejeitar_medicao", { p_medicao: id, p_comentario: comentario }),
+    mensagem: "Medição rejeitada.",
+    revalidar: () => revalidar(obraId),
+  })
 }
 
 export async function reabrirMedicao(obraId: string, id: string, motivo: string): Promise<Resultado> {
-  if (!(await usuarioDaAcao("admin", "gestor"))) return SEM_PERMISSAO
-  const supabase = await createClient()
-  const { error } = await supabase.rpc("reabrir_medicao", { p_medicao: id, p_motivo: motivo })
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
-  revalidar(obraId)
-  return { ok: true, mensagem: "Medição reaberta: volta a aguardar aprovação." }
+  return executar({
+    papeis: GESTAO,
+    operacao: (sb) => sb.rpc("reabrir_medicao", { p_medicao: id, p_motivo: motivo }),
+    mensagem: "Medição reaberta: volta a aguardar aprovação.",
+    revalidar: () => revalidar(obraId),
+  })
 }
 
 export async function excluirMedicao(obraId: string, id: string): Promise<Resultado> {
-  if (!(await usuarioDaAcao("admin", "gestor", "campo"))) return SEM_PERMISSAO
-  const supabase = await createClient()
-  const { error } = await supabase.from("medicoes").delete().eq("id", id)
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
-  revalidar(obraId)
-  return { ok: true, mensagem: "Medição excluída." }
+  return executar({
+    papeis: EQUIPE_DA_OBRA,
+    operacao: (sb) => sb.from("medicoes").delete().eq("id", id),
+    mensagem: "Medição excluída.",
+    revalidar: () => revalidar(obraId),
+  })
 }

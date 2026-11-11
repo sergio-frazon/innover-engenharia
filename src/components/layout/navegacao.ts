@@ -3,7 +3,7 @@ import type { Papel } from "@/lib/rotulos"
 export type ItemMenu = { rotulo: string; href: string; icone: string; papeis?: Papel[] }
 export type GrupoMenu = { titulo?: string; itens: ItemMenu[] }
 
-export const MENU: GrupoMenu[] = [
+const MENU: GrupoMenu[] = [
   {
     itens: [
       { rotulo: "Painel", href: "/painel", icone: "painel" },

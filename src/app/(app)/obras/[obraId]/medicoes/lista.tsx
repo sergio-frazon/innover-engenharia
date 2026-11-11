@@ -1,15 +1,15 @@
 "use client"
 
 import Link from "next/link"
-import { useActionState, useState, useTransition } from "react"
+import { useActionState, useState } from "react"
 import { CheckCircle2, Pencil, Plus, RotateCcw, Send, Trash2, XCircle } from "lucide-react"
-import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { BotaoEnviar, Campo, ErroFormulario, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
+import { useAcao } from "@/components/comum/use-acao"
 import { Confirmar } from "@/components/comum/confirmar"
 import { EstadoVazio } from "@/components/comum/pagina"
 import { StatusBadge } from "@/components/comum/status"
@@ -140,25 +140,9 @@ export function ListaMedicoes({
 }) {
   const [selecionadas, setSelecionadas] = useState<string[]>([])
   const [editando, setEditando] = useState<LinhaMedicao | null>(null)
-  const [pendente, iniciar] = useTransition()
+  const { pendente, executar } = useAcao()
   const aprovaveis = linhas.filter((l) => l.aprovavel)
-
-  function aprovar(ids: string[]) {
-    iniciar(async () => {
-      const r = await aprovarMedicoes(obraId, ids)
-      if (r.ok) {
-        toast.success(r.mensagem)
-        setSelecionadas([])
-      } else toast.error(r.erro)
-    })
-  }
-  function executar(p: Promise<{ ok: boolean; erro?: string; mensagem?: string }>) {
-    iniciar(async () => {
-      const r = await p
-      if (r.ok) toast.success(r.mensagem)
-      else toast.error(r.erro)
-    })
-  }
+  const aprovar = (ids: string[]) => executar(aprovarMedicoes(obraId, ids), () => setSelecionadas([]))
 
   if (linhas.length === 0) {
     return <EstadoVazio titulo={pendentes ? "Nenhuma medição aguardando aprovação." : "Nenhuma medição encontrada."} />

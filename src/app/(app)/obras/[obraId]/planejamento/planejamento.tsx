@@ -1,21 +1,20 @@
 "use client"
 
 import Link from "next/link"
-import { useActionState, useState, useTransition } from "react"
+import { useActionState, useState } from "react"
 import { ArrowDown, ArrowUp, FileText, MoreHorizontal, Pencil, Plus, Power } from "lucide-react"
-import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { BotaoEnviar, Campo, ErroFormulario, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
+import { useAcao } from "@/components/comum/use-acao"
 import { HistoricoRegistro } from "@/components/comum/historico-registro"
 import { EstadoVazio } from "@/components/comum/pagina"
 import { BarraProgresso, StatusBadge, TomBadge } from "@/components/comum/status"
 import { numeroParaInput, percentual, quantidade } from "@/lib/format"
 import { SITUACAO_PRAZO, UNIDADES } from "@/lib/rotulos"
 import type { Tables } from "@/lib/supabase/database.types"
-import type { Resultado } from "@/lib/acoes"
 import { alternarEtapa, alternarServico, moverEtapa, moverServico, salvarEtapa, salvarServico } from "./actions"
 
 export type ServicoPlan = Tables<"servicos"> & {
@@ -168,15 +167,7 @@ export function Planejamento({
 }) {
   const [dialogo, setDialogo] = useState<Dialogo>(null)
   const [mostrarInativos, setMostrarInativos] = useState(false)
-  const [pendente, iniciar] = useTransition()
-
-  function executar(p: Promise<Resultado>) {
-    iniciar(async () => {
-      const r = await p
-      if (!r.ok) toast.error(r.erro)
-      else if (r.mensagem) toast.success(r.mensagem)
-    })
-  }
+  const { pendente, executar } = useAcao()
 
   const visiveis = etapas.filter((e) => mostrarInativos || e.ativo)
   const etapaDialogo = dialogo?.tipo === "servico" ? etapas.find((e) => e.id === dialogo.etapaId) : undefined

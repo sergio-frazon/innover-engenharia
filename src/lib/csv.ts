@@ -9,12 +9,14 @@ function celula(v: string | number | null | undefined): string {
   return /[";\r\n]/.test(texto) ? `"${texto.replace(/"/g, '""')}"` : texto
 }
 
+/** Monta o CSV a partir de colunas declarativas (título + função que extrai o valor da linha). */
 export function gerarCsv<T>(colunas: ColunaCsv<T>[], linhas: T[]): string {
   const cabecalho = colunas.map((c) => celula(c.titulo)).join(";")
   const corpo = linhas.map((l) => colunas.map((c) => celula(c.valor(l))).join(";"))
   return "﻿" + [cabecalho, ...corpo].join("\r\n") + "\r\n"
 }
 
+/** Resposta HTTP de download, sem cache (os dados mudam e dependem de quem pede). */
 export function respostaCsv(conteudo: string, nomeArquivo: string): Response {
   return new Response(conteudo, {
     headers: {
@@ -23,4 +25,9 @@ export function respostaCsv(conteudo: string, nomeArquivo: string): Response {
       "Cache-Control": "no-store",
     },
   })
+}
+
+/** Resposta das exportações para quem não pode ver o dado: 404, como as páginas (docs/06-telas.md). */
+export function naoEncontrado(): Response {
+  return new Response(null, { status: 404 })
 }

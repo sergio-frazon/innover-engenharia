@@ -120,6 +120,10 @@ function Formulario({ campos, linha, salvar, aoConcluir }: { campos: DefCampo[];
   )
 }
 
+/**
+ * Tela de cadastro simples (lista + formulário em diálogo + ativar/desativar), usada por pessoas,
+ * profissionais, materiais, equipamentos e categorias. Os campos são declarados por quem usa.
+ */
 export function CadastroGenerico({ singular, colunas, linhas, campos, salvar, alternar, podeEditar, vazio }: Props) {
   const [busca, setBusca] = useState("")
   const [mostrarInativos, setMostrarInativos] = useState(false)

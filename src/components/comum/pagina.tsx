@@ -2,6 +2,7 @@ import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+/** Título da página com descrição e botões de ação à direita. */
 export function Cabecalho({
   titulo,
   descricao,
@@ -42,6 +43,7 @@ export function Cabecalho({
   )
 }
 
+/** Lista vazia: explica o motivo e, se fizer sentido, oferece a ação para começar. */
 export function EstadoVazio({
   titulo,
   descricao,
@@ -63,6 +65,7 @@ export function EstadoVazio({
   )
 }
 
+/** Bloco com título (cartão branco) para agrupar conteúdo da página. */
 export function Secao({
   titulo,
   acoes,
@@ -87,6 +90,7 @@ export function Secao({
   )
 }
 
+/** Número de destaque do painel; com `href`, vira link para a lista correspondente. */
 export function Indicador({
   rotulo,
   valor,

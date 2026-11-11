@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { falhaValidacao, texto, textoOpcional, type Resultado } from "@/lib/acoes"
 import { mensagemDeErro } from "@/lib/erros"
+import { falha } from "@/lib/acao-servidor"
 import { SEM_PERMISSAO, usuarioDaAcao } from "@/lib/auth"
 
 const papelSchema = z.enum(["admin", "gestor", "campo", "financeiro"], { error: "Selecione o perfil." })
@@ -67,7 +68,7 @@ export async function convidarUsuario(_: Resultado | null, formData: FormData): 
     .from("perfis")
     .update({ papel: dados.data.papel, nome: dados.data.nome })
     .eq("id", data.user.id)
-  if (erroPerfil) return { ok: false, erro: mensagemDeErro(erroPerfil) }
+  if (erroPerfil) return falha(erroPerfil)
 
   const erroObras = await sincronizarObras(data.user.id, obras)
   if (erroObras) return { ok: false, erro: erroObras }
@@ -92,7 +93,7 @@ export async function editarUsuario(_: Resultado | null, formData: FormData): Pr
 
   const supabase = await createClient()
   const { error } = await supabase.from("perfis").update(campos).eq("id", id)
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
+  if (error) return falha(error)
 
   await createAdminClient().auth.admin.updateUserById(id, { app_metadata: { papel: campos.papel } })
 
@@ -110,7 +111,7 @@ export async function alterarSituacaoUsuario(id: string, ativo: boolean): Promis
 
   const supabase = await createClient()
   const { error } = await supabase.from("perfis").update({ ativo }).eq("id", id)
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
+  if (error) return falha(error)
 
   const { error: erroAuth } = await createAdminClient().auth.admin.updateUserById(id, {
     ban_duration: ativo ? "none" : "876000h",

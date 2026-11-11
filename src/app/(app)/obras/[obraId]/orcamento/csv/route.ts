@@ -1,13 +1,13 @@
-import { NextResponse, type NextRequest } from "next/server"
-import { getUsuario } from "@/lib/auth"
+import type { NextRequest } from "next/server"
+import { usuarioDaAcao } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
-import { gerarCsv, respostaCsv } from "@/lib/csv"
+import { gerarCsv, naoEncontrado, respostaCsv } from "@/lib/csv"
 import { NATUREZA } from "@/lib/rotulos"
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ obraId: string }> }) {
   const { obraId } = await params
-  const usuario = await getUsuario()
-  if (!usuario?.ativo || !["admin", "gestor", "financeiro"].includes(usuario.papel)) return new NextResponse(null, { status: 404 })
+  const usuario = await usuarioDaAcao("admin", "gestor", "financeiro")
+  if (!usuario) return naoEncontrado()
 
   const versaoId = request.nextUrl.searchParams.get("v") ?? ""
   const supabase = await createClient()
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       .select("natureza, descricao, unidade, quantidade, valor_unitario, valor_total, servico:servicos(codigo, descricao, etapa:etapas(codigo, nome))")
       .eq("versao_id", versaoId),
   ])
-  if (!versao) return new NextResponse(null, { status: 404 })
+  if (!versao) return naoEncontrado()
 
   const linhas = (itens ?? []).sort((a, b) => (a.servico?.codigo ?? "").localeCompare(b.servico?.codigo ?? "", "pt-BR", { numeric: true }))
   const csv = gerarCsv(

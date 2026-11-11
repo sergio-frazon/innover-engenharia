@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { cn } from "@/lib/utils"
 import type { Resultado } from "@/lib/acoes"
 
+/** Rótulo + controle + mensagem de erro do campo, com `aria` ligando o erro ao input. */
 export function Campo({
   rotulo,
   nome,
@@ -44,6 +45,7 @@ export function Campo({
   )
 }
 
+/** Botão de envio que se desabilita e mostra "carregando" enquanto o formulário está sendo enviado. */
 export function BotaoEnviar({
   children,
   pendente,
@@ -67,6 +69,7 @@ export function BotaoEnviar({
   )
 }
 
+/** Erro geral do formulário (o que não pertence a um campo específico). */
 export function ErroFormulario({ estado }: { estado: Resultado | null }) {
   if (!estado || estado.ok) return null
   return (
@@ -87,10 +90,12 @@ export function useRetornoAcao(estado: Resultado | null, opcoes: { sucesso?: str
     } else if (!estado.campos) {
       toast.error(estado.erro)
     }
+    // Só reage a um novo resultado da action; as opções mudam a cada render e não devem disparar o toast de novo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [estado])
 }
 
+/** Mensagem de erro de um campo, para passar ao <Campo erro={...}>. */
 export function erroCampo(estado: Resultado | null, campo: string): string | undefined {
   return estado && !estado.ok ? estado.campos?.[campo] : undefined
 }

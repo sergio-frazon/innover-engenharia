@@ -26,7 +26,7 @@ Se encontrar uma contradição real, registre em `docs/08-decisoes.md` (seção 
 - Tailwind CSS 4 + shadcn/ui + lucide-react
 - Supabase: Postgres 15+, Auth, Storage, RLS. Local via Supabase CLI (Docker). Produção: Supabase Cloud
 - Hospedagem: Vercel
-- Validação: zod. Datas: date-fns com locale `ptBR`. Gráficos: recharts
+- Validação: zod 4. Datas e números: `Intl` (pt-BR) via `src/lib/format.ts`. Gráficos: recharts
 - Testes: Vitest (funções TS puras) e pgTAP via `supabase test db` (RLS, triggers, funções SQL)
 
 ## Comandos
@@ -65,7 +65,13 @@ npm run lint && npm run typecheck && npm test && npm run build   # verificação
 
 - Leitura de dados em Server Components via `createClient()` de `src/lib/supabase/server.ts`.
 - Escrita via Server Actions em `src/app/**/actions.ts`, sempre: validar com zod → chamar Supabase →
-  tratar erro → `revalidatePath`. Retornar `{ ok: true } | { ok: false, erro: string, campos?: Record<string,string> }`.
+  tratar erro → `revalidatePath`. Retornar `Resultado` (`src/lib/acoes.ts`).
+  - Ação de um passo só (aprovar, enviar, remover): `executar({ papeis, operacao, mensagem, revalidar })`
+    de `src/lib/acao-servidor.ts`. Erro do banco: `falha(error)`. Papéis: `GESTAO`, `EQUIPE_DA_OBRA`, `FINANCEIRO`.
+    Revalidação: `revalidarObra(obraId, { resumos })`.
+  - Campos de formulário: construtores de `src/lib/acoes.ts` (`texto`, `uuid`, `numeroBR`, `booleano`...).
+- No cliente, botão que chama uma action sem formulário: hook `useAcao()` (`src/components/comum/use-acao.ts`).
+  Formulário: `useActionState` + `useRetornoAcao` (`src/components/comum/formulario.tsx`).
 - Erros do Postgres levantados por triggers usam `raise exception using errcode = 'P0001', message = '<mensagem em português para o usuário>'`.
   A action repassa `error.message` ao usuário quando `error.code === 'P0001'`; nos demais casos, mensagem genérica + `console.error`.
 - Componentes de formulário: client components pequenos usando `useActionState`.

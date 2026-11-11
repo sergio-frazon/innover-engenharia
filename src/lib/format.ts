@@ -1,28 +1,44 @@
 // Formatação pt-BR. Datas de calendário chegam do banco como "aaaa-mm-dd" e
 // NÃO podem passar por new Date(texto) (viraria UTC e mudaria o dia).
 
+type Valor = number | string | null | undefined
+
+/** Valores numéricos vêm do Postgres como number ou string (numeric). Vazio vira "—" na tela. */
+const vazio = (valor: Valor): valor is null | undefined | "" => valor === null || valor === undefined || valor === ""
+
+// Intl.NumberFormat é caro de criar: um por configuração, reaproveitado em todas as células
+const formatadores = new Map<string, Intl.NumberFormat>()
+function formatador(minCasas: number, maxCasas: number): Intl.NumberFormat {
+  const chave = `${minCasas}-${maxCasas}`
+  let fmt = formatadores.get(chave)
+  if (!fmt) {
+    fmt = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: minCasas, maximumFractionDigits: maxCasas })
+    formatadores.set(chave, fmt)
+  }
+  return fmt
+}
+
 const moedaFmt = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" })
 
-export function moeda(valor: number | string | null | undefined): string {
-  if (valor === null || valor === undefined || valor === "") return "—"
-  return moedaFmt.format(Number(valor))
+/** R$ 1.234,56 */
+export function moeda(valor: Valor): string {
+  return vazio(valor) ? "—" : moedaFmt.format(Number(valor))
 }
 
-export function numero(valor: number | string | null | undefined, maxCasas = 2): string {
-  if (valor === null || valor === undefined || valor === "") return "—"
-  return new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: maxCasas }).format(Number(valor))
+/** 1.234,5 — até `maxCasas` decimais, sem zeros à direita. */
+export function numero(valor: Valor, maxCasas = 2): string {
+  return vazio(valor) ? "—" : formatador(0, maxCasas).format(Number(valor))
 }
 
-export function quantidade(valor: number | string | null | undefined, unidade?: string | null): string {
+/** Número com a unidade: "12,5 m²". */
+export function quantidade(valor: Valor, unidade?: string | null): string {
   const n = numero(valor, 2)
   return unidade && n !== "—" ? `${n} ${unidade}` : n
 }
 
-export function percentual(valor: number | string | null | undefined, casas = 1): string {
-  if (valor === null || valor === undefined || valor === "") return "—"
-  return (
-    new Intl.NumberFormat("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas }).format(Number(valor)) + "%"
-  )
+/** 56,4% — sempre com `casas` decimais, para alinhar colunas. */
+export function percentual(valor: Valor, casas = 1): string {
+  return vazio(valor) ? "—" : formatador(casas, casas).format(Number(valor)) + "%"
 }
 
 /** "aaaa-mm-dd" → "dd/mm/aaaa" */
@@ -94,10 +110,12 @@ export function numeroParaInput(valor: number | string | null | undefined): stri
   return String(Number(valor)).replace(".", ",")
 }
 
+/** Remove tudo que não é dígito (CPF, CNPJ, telefone). */
 export function somenteDigitos(texto: string | null | undefined): string {
   return (texto ?? "").replace(/\D/g, "")
 }
 
+/** CPF (11 dígitos) ou CNPJ (14) com máscara; outro tamanho volta como veio. */
 export function documentoFormatado(doc: string | null | undefined): string {
   const d = somenteDigitos(doc)
   if (d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")

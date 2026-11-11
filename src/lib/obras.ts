@@ -4,24 +4,24 @@ import { notFound } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import type { Papel } from "@/lib/rotulos"
 
-/** Obra pelo id; 404 se não existir ou o usuário não tiver acesso (RLS). */
+/**
+ * Obra pelo id; 404 se não existir ou o usuário não tiver acesso (RLS).
+ * O cliente vem de `v_pessoas_basico` (só id e nome), que todos os perfis leem — inclusive o campo,
+ * que não lê a tabela `pessoas`. Cacheado por requisição: layout e página compartilham a consulta.
+ */
 export const getObra = cache(async (obraId: string) => {
   if (!/^[0-9a-f-]{36}$/i.test(obraId)) notFound()
   const supabase = await createClient()
   const { data } = await supabase
     .from("obras")
-    .select("*, cliente:pessoas(id, nome), responsavel:perfis!obras_responsavel_id_fkey(id, nome)")
+    .select("*, cliente:v_pessoas_basico(id, nome), responsavel:perfis!obras_responsavel_id_fkey(id, nome)")
     .eq("id", obraId)
     .maybeSingle()
   if (!data) notFound()
-  // Perfil campo não lê "pessoas": busca só o nome pela view básica
-  if (data.cliente_id && !data.cliente) {
-    const { data: c } = await supabase.from("v_pessoas_basico").select("id, nome").eq("id", data.cliente_id).maybeSingle()
-    if (c?.id && c.nome) return { ...data, cliente: { id: c.id, nome: c.nome } }
-  }
   return data
 })
 
+/** Obra concluída ou cancelada: só o admin altera (R-OBR-03). */
 export function obraFechada(situacao: string) {
   return situacao === "concluida" || situacao === "cancelada"
 }
@@ -34,6 +34,7 @@ export function podeGerirObra(papel: Papel, situacao: string) {
 
 export type AbaObra = { href: string; rotulo: string; papeis?: Papel[] }
 
+/** Abas da página da obra visíveis para o papel (campo não vê orçamento, financeiro nem histórico). */
 export function abasDaObra(obraId: string, papel: Papel): AbaObra[] {
   const base = `/obras/${obraId}`
   const abas: AbaObra[] = [

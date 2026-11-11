@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
 import { falhaValidacao, texto, textoOpcional, type Resultado } from "@/lib/acoes"
-import { mensagemDeErro } from "@/lib/erros"
+import { falha } from "@/lib/acao-servidor"
 import { SEM_PERMISSAO, usuarioDaAcao } from "@/lib/auth"
 
 const perfilSchema = z.object({ nome: texto("Informe seu nome."), telefone: textoOpcional })
@@ -17,7 +17,7 @@ export async function salvarPerfil(_: Resultado | null, formData: FormData): Pro
 
   const supabase = await createClient()
   const { error } = await supabase.from("perfis").update(dados.data).eq("id", usuario.id)
-  if (error) return { ok: false, erro: mensagemDeErro(error) }
+  if (error) return falha(error)
   revalidatePath("/", "layout")
   return { ok: true, mensagem: "Perfil atualizado." }
 }

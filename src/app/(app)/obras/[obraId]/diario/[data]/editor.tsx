@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { BotaoEnviar, Campo, ErroFormulario, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
+import { useAcao } from "@/components/comum/use-acao"
 import { Confirmar } from "@/components/comum/confirmar"
 import { StatusBadge } from "@/components/comum/status"
 import { data as fmtData, dataHora, hora, lerNumero, numeroParaInput, quantidade } from "@/lib/format"
@@ -93,18 +94,6 @@ function Bloco({ titulo, contagem, acao, children }: { titulo: string; contagem?
   )
 }
 
-function useExecutar() {
-  const [pendente, iniciar] = useTransition()
-  const executar = (p: Promise<Resultado>, sucesso?: string) =>
-    iniciar(async () => {
-      const r = await p
-      if (r.ok) {
-        if (sucesso || r.mensagem) toast.success(r.mensagem ?? sucesso)
-      } else toast.error(r.erro)
-    })
-  return { pendente, executar }
-}
-
 function BotaoRemover({ rotulo, onClick, disabled }: { rotulo: string; onClick: () => void; disabled?: boolean }) {
   return (
     <Button variant="ghost" size="icon" className="shrink-0 text-slate-500 hover:text-red-700" aria-label={rotulo} onClick={onClick} disabled={disabled}>
@@ -151,7 +140,7 @@ export function DiarioEditor({
   editadoAposAprovacao: { quem: string; quando: string } | null
 }) {
   const d = dados.diario
-  const { pendente, executar } = useExecutar()
+  const { pendente, executar } = useAcao()
   const podeEnviar = podeEditar && (d.status === "rascunho" || d.status === "correcao_solicitada")
   const podeExcluir = d.status === "rascunho" && (gestor || d.criado_por === meuId)
 
@@ -452,7 +441,7 @@ function Cabecalho({ obraId, diario, podeEditar }: { obraId: string; diario: Dad
 
 function ServicosExecutados({ obraId, dados, podeEditar }: { obraId: string; dados: DadosDiario; podeEditar: boolean }) {
   const [editando, setEditando] = useState<DadosDiario["medicoes"][number] | "novo" | null>(null)
-  const { pendente, executar } = useExecutar()
+  const { pendente, executar } = useAcao()
   const lancados = new Set(dados.medicoes.map((m) => m.servico_id))
 
   return (

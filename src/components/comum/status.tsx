@@ -3,6 +3,7 @@ import { CLASSES_TOM, type Tom } from "@/lib/rotulos"
 
 type Mapa = Record<string, { texto: string; tom: Tom }>
 
+/** Etiqueta de status com texto e cor vindos de um mapa de lib/rotulos (cor nunca é a única informação). */
 export function StatusBadge({ mapa, valor, className }: { mapa: Mapa; valor: string | null | undefined; className?: string }) {
   const r = valor ? mapa[valor] : undefined
   return (
@@ -18,6 +19,7 @@ export function StatusBadge({ mapa, valor, className }: { mapa: Mapa; valor: str
   )
 }
 
+/** Etiqueta com cor livre, para casos fora dos mapas de status. */
 export function TomBadge({ tom, children, className }: { tom: Tom; children: React.ReactNode; className?: string }) {
   return (
     <span
@@ -32,6 +34,7 @@ export function TomBadge({ tom, children, className }: { tom: Tom; children: Rea
   )
 }
 
+/** Barra de 0 a 100% (valores fora disso são limitados). */
 export function BarraProgresso({ valor, className, tom = "azul" }: { valor: number; className?: string; tom?: "azul" | "verde" | "vermelho" | "ambar" }) {
   const v = Math.max(0, Math.min(100, Number(valor) || 0))
   const cor = { azul: "bg-blue-600", verde: "bg-emerald-600", vermelho: "bg-red-600", ambar: "bg-amber-500" }[tom]

@@ -12,7 +12,7 @@ export type FiltrosParcelas = {
   q?: string
 }
 
-export const SITUACOES_PADRAO = ["aberta", "parcial", "vencida"]
+const SITUACOES_PADRAO = ["aberta", "parcial", "vencida"]
 
 /** Parcelas (v_parcelas_situacao) com nomes de pessoa, obra e categoria. */
 export async function buscarParcelas(f: FiltrosParcelas, opcoes: { obraFixa?: string; limite?: number } = {}) {

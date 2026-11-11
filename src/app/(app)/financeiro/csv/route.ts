@@ -1,13 +1,13 @@
-import { NextResponse, type NextRequest } from "next/server"
-import { getUsuario } from "@/lib/auth"
+import type { NextRequest } from "next/server"
+import { usuarioDaAcao } from "@/lib/auth"
 import { buscarParcelas } from "@/lib/financeiro"
-import { gerarCsv, respostaCsv } from "@/lib/csv"
+import { gerarCsv, naoEncontrado, respostaCsv } from "@/lib/csv"
 import { data } from "@/lib/format"
 import { SITUACAO_PARCELA } from "@/lib/rotulos"
 
 export async function GET(request: NextRequest) {
-  const usuario = await getUsuario()
-  if (!usuario?.ativo || !["admin", "financeiro"].includes(usuario.papel)) return new NextResponse(null, { status: 404 })
+  const usuario = await usuarioDaAcao("admin", "financeiro")
+  if (!usuario) return naoEncontrado()
   const f = Object.fromEntries(request.nextUrl.searchParams)
   const { linhas } = await buscarParcelas(f, { limite: 5000 })
   const csv = gerarCsv(

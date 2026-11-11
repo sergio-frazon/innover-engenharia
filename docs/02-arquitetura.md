@@ -31,7 +31,7 @@ Versões mínimas; fixar a versão exata no `package.json` ao instalar.
 | `@supabase/supabase-js@2`, `@supabase/ssr` | Banco e auth |
 | `supabase` (devDependency) | CLI: banco local, migrations, tipos, testes |
 | `zod@3` | Validação |
-| `date-fns@4` | Datas (`ptBR`) |
+| `Intl` (nativo) | Datas e números em pt-BR (`src/lib/format.ts`) |
 | `recharts@2` | Gráficos do painel |
 | `vitest`, `@vitejs/plugin-react` | Testes unitários |
 

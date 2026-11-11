@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client"
 
+/** Tipos e tamanhos aceitos por bucket (os mesmos limites estão nos buckets do Storage, migration 0007). */
 export const LIMITES = {
   documentos: {
     bytes: 50 * 1024 * 1024,
@@ -17,6 +18,7 @@ export const LIMITES = {
 
 export type Bucket = keyof typeof LIMITES
 
+/** Validação no navegador, antes do envio, para dar a mensagem certa; o Storage valida de novo. */
 export function validarArquivo(bucket: Bucket, arquivo: File): string | null {
   const ext = arquivo.name.split(".").pop()?.toLowerCase() ?? ""
   if (!(LIMITES[bucket].extensoes as readonly string[]).includes(ext)) return `Tipo de arquivo não aceito. Use ${LIMITES[bucket].rotulo}.`

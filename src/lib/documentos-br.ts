@@ -1,5 +1,6 @@
 // Validação de CPF e CNPJ por dígito verificador (R-CAD-02)
 
+/** Aceita com ou sem máscara; rejeita sequências repetidas (111.111.111-11). */
 export function cpfValido(cpf: string): boolean {
   const d = cpf.replace(/\D/g, "")
   if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false
@@ -13,6 +14,7 @@ export function cpfValido(cpf: string): boolean {
   return true
 }
 
+/** Aceita com ou sem máscara; rejeita sequências repetidas. */
 export function cnpjValido(cnpj: string): boolean {
   const d = cnpj.replace(/\D/g, "")
   if (d.length !== 14 || /^(\d)\1{13}$/.test(d)) return false
