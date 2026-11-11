@@ -31,3 +31,19 @@ end $$;
 
 grant usage on schema tests to authenticated;
 grant execute on all functions in schema tests to authenticated;
+
+-- Cada teste começa sem os dados do seed (o rollback final os devolve)
+do $$
+begin
+  execute (
+    select 'truncate ' || string_agg(format('public.%I', tablename), ', ') || ' cascade'
+      from pg_tables where schemaname = 'public'
+  );
+  delete from auth.identities;
+  delete from auth.users;
+  insert into public.categorias_financeiras (nome, tipo) values
+    ('Materiais', 'despesa'), ('Mão de obra', 'despesa'), ('Equipamentos', 'despesa'),
+    ('Serviços de terceiros', 'despesa'), ('Impostos e taxas', 'despesa'), ('Administrativo', 'despesa'),
+    ('Outros', 'despesa'), ('Medição de contrato', 'receita'), ('Adiantamento do cliente', 'receita'), ('Outros', 'receita');
+end;
+$$;

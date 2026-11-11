@@ -111,7 +111,7 @@ security definer
 set search_path = ''
 as $$
 begin
-  if not public.pode_editar_financeiro_obra(p_obra) then
+  if auth.uid() is not null and not public.pode_editar_financeiro_obra(p_obra) then
     perform public.erro('Você não tem permissão para lançamentos financeiros desta obra.');
   end if;
 end;

@@ -168,7 +168,9 @@ begin
 
   return query
   with s as (
-    select * from public.servicos where obra_id = p_obra and ativo
+    select sv.*, e.ordem as etapa_ordem, e.codigo as etapa_codigo
+      from public.servicos sv join public.etapas e on e.id = sv.etapa_id
+     where sv.obra_id = p_obra and sv.ativo
   ),
   orc as (
     select i.servico_id, sum(i.valor_total) as valor
@@ -231,7 +233,7 @@ begin
            else 'no_prazo'
          end
     from calc c
-   order by c.ordem, c.codigo;
+   order by c.etapa_ordem, c.etapa_codigo, c.ordem, c.codigo;
 end;
 $$;
 
