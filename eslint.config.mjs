@@ -15,6 +15,8 @@ const eslintConfig = [
     ignores: [
       "node_modules/**",
       ".next/**",
+      ".next-verificacao/**",
+      "src/lib/supabase/database.types.ts",
       "out/**",
       "build/**",
       "next-env.d.ts",
