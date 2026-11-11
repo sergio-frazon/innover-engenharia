@@ -519,6 +519,7 @@ begin
   update public.orcamento_versoes
      set status = 'aprovada', aprovada_por = auth.uid(), aprovada_em = now()
    where id = p_versao;
+  perform public.desligar_via_rpc();
 end;
 $$;
 
@@ -618,6 +619,7 @@ begin
   update public.cronograma_versoes
      set status = 'aprovada', aprovada_por = auth.uid(), aprovada_em = now()
    where id = p_versao;
+  perform public.desligar_via_rpc();
 end;
 $$;
 

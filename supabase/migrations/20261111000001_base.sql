@@ -79,7 +79,16 @@ begin
 end;
 $$;
 
+create or replace function public.desligar_via_rpc()
+returns void
+language sql
+set search_path = ''
+as $$
+  select set_config('app.via_rpc', '', true);
+$$;
+
 revoke execute on function public.ligar_via_rpc() from public, anon, authenticated;
+revoke execute on function public.desligar_via_rpc() from public, anon, authenticated;
 
 -- -----------------------------------------------------------------------------
 -- Perfis
