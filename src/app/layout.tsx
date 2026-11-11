@@ -7,8 +7,8 @@ import "./globals.css"
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: { default: "Gestão de Obras", template: "%s · Gestão de Obras" },
-  description: "Planejamento, execução e financeiro de obras",
+  title: { default: "Gestão de Obras · Innover Engenharia", template: "%s · Innover Engenharia" },
+  description: "Innover Engenharia: planejamento, execução e financeiro de obras",
 }
 
 export const viewport: Viewport = {

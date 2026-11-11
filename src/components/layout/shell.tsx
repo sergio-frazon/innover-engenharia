@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { Logo } from "@/components/comum/logo"
 import { useState } from "react"
 import {
   Bell,
@@ -148,8 +149,9 @@ export function Shell({ usuario, alertas, children }: Props) {
     <div className="min-h-dvh bg-slate-50 print:bg-white">
       {/* Computador */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r bg-white lg:flex print:hidden">
-        <Link href="/painel" className="flex h-14 items-center gap-2 border-b px-5 font-semibold">
-          <HardHat className="size-5 text-blue-600" /> Gestão de Obras
+        <Link href="/painel" className="flex h-16 items-center gap-3 border-b px-5">
+          <Logo className="h-10" prioridade />
+          <span className="text-xs leading-tight font-medium text-muted-foreground">Gestão de Obras</span>
         </Link>
         <div className="flex-1 overflow-y-auto">
           <ListaMenu papel={usuario.papel} alertas={alertas} />
@@ -164,15 +166,16 @@ export function Shell({ usuario, alertas, children }: Props) {
         <Button variant="ghost" size="icon-lg" onClick={() => setAberto(true)} aria-label="Abrir menu">
           <Menu className="size-5" />
         </Button>
-        <Link href="/painel" className="flex items-center gap-2 font-semibold">
-          <HardHat className="size-5 text-blue-600" /> Gestão de Obras
+        <Link href="/painel" className="flex items-center" aria-label="Painel">
+          <Logo className="h-8" />
         </Link>
       </header>
       <Sheet open={aberto} onOpenChange={setAberto}>
         <SheetContent side="left" className="w-72 gap-0 p-0">
           <SheetHeader className="border-b">
             <SheetTitle className="flex items-center gap-2">
-              <HardHat className="size-5 text-blue-600" /> Gestão de Obras
+              <Logo className="h-8" />
+              <span className="text-xs font-medium text-muted-foreground">Gestão de Obras</span>
             </SheetTitle>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto">

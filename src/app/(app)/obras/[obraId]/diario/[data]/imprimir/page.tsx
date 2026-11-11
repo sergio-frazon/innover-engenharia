@@ -4,6 +4,7 @@ import { getObra } from "@/lib/obras"
 import { createClient } from "@/lib/supabase/server"
 import { data as fmtData, dataHora, hora, quantidade } from "@/lib/format"
 import { CLIMA, STATUS_DIARIO, TIPO_OCORRENCIA } from "@/lib/rotulos"
+import { Logo } from "@/components/comum/logo"
 import { BotaoImprimir } from "./botao"
 
 function Linha({ rotulo, valor }: { rotulo: string; valor: React.ReactNode }) {
@@ -52,12 +53,15 @@ export default async function ImprimirDiario({ params }: { params: Promise<{ obr
         <BotaoImprimir />
       </div>
       <header className="flex items-start justify-between border-b-2 border-slate-800 pb-2">
-        <div>
-          <p className="text-xs text-slate-500">DIÁRIO DE OBRA</p>
-          <h1 className="text-lg font-bold">{obra.nome}</h1>
-          <p className="text-xs">
-            {obra.codigo} · {obra.cliente?.nome ?? "—"} · {[obra.endereco, obra.cidade, obra.uf].filter(Boolean).join(", ")}
-          </p>
+        <div className="flex items-start gap-4">
+          <Logo className="h-12" />
+          <div>
+            <p className="text-xs text-slate-500">DIÁRIO DE OBRA</p>
+            <h1 className="text-lg font-bold">{obra.nome}</h1>
+            <p className="text-xs">
+              {obra.codigo} · {obra.cliente?.nome ?? "—"} · {[obra.endereco, obra.cidade, obra.uf].filter(Boolean).join(", ")}
+            </p>
+          </div>
         </div>
         <div className="text-right">
           <p className="text-lg font-bold">{fmtData(d.data)}</p>
