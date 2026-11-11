@@ -145,9 +145,9 @@ export function Shell({ usuario, alertas, children }: Props) {
   ]
 
   return (
-    <div className="min-h-dvh bg-slate-50">
+    <div className="min-h-dvh bg-slate-50 print:bg-white">
       {/* Computador */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r bg-white lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r bg-white lg:flex print:hidden">
         <Link href="/painel" className="flex h-14 items-center gap-2 border-b px-5 font-semibold">
           <HardHat className="size-5 text-blue-600" /> Gestão de Obras
         </Link>
@@ -160,7 +160,7 @@ export function Shell({ usuario, alertas, children }: Props) {
       </aside>
 
       {/* Celular: topo */}
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-white px-2 lg:hidden">
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-white px-2 lg:hidden print:hidden">
         <Button variant="ghost" size="icon-lg" onClick={() => setAberto(true)} aria-label="Abrir menu">
           <Menu className="size-5" />
         </Button>
@@ -184,7 +184,7 @@ export function Shell({ usuario, alertas, children }: Props) {
         </SheetContent>
       </Sheet>
 
-      <main className="px-4 pt-5 pb-24 sm:px-6 lg:ml-64 lg:px-8 lg:pt-8 lg:pb-10">
+      <main className="px-4 pt-5 pb-24 sm:px-6 lg:ml-64 lg:px-8 lg:pt-8 lg:pb-10 print:m-0 print:p-0">
         <div className="mx-auto max-w-7xl">{children}</div>
       </main>
 
