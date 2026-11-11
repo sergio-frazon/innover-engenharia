@@ -53,4 +53,5 @@
 | 11/11/2026 | 14 | Páginas sem permissão mostram a tela 404, mas o código HTTP pode ser 200 (streaming do Next). Verificado que nenhum dado vaza no conteúdo. | Limitação do streaming do App Router; a segurança real é o RLS. |
 | 11/11/2026 | 14 | `getObra` busca o nome do cliente em `v_pessoas_basico` quando o perfil não lê `pessoas`. | Campo via "Sem cliente". |
 | 11/11/2026 | 17 | Medição de diário: `obra_id` é enviado no insert (o trigger confirma pela obra do serviço). | Tipagem gerada exige a coluna. |
+| 11/11/2026 | testes | Links de convite e recuperação passam a usar `token_hash` validado no servidor (`/auth/verificar`) com templates em português (`supabase/templates`); validade 24 h. | Links PKCE só funcionavam no mesmo navegador; e-mails vinham em inglês; convite de 1 h é curto para uso real. |
 

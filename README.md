@@ -53,6 +53,8 @@ Criados pelo `supabase/seed.sql`, todos com a senha de teste definida no topo de
 | inativo@teste.local | Desativado (não entra) |
 
 E-mails enviados localmente (convites, recuperação de senha) aparecem em http://localhost:54324.
+Os links valem 24 horas e só funcionam uma vez. Depois de um `db reset`, os e-mails antigos param de funcionar,
+porque os usuários foram recriados.
 O painel do banco local fica em http://localhost:54323.
 
 ### Verificação completa
@@ -97,8 +99,14 @@ NEXT_DIST_DIR=.next-verificacao npm run build
 5. Em **Authentication → URL Configuration**:
    - *Site URL*: `https://SEU-DOMINIO`
    - *Redirect URLs*: `https://SEU-DOMINIO/**`
-6. Em **Authentication → Emails → SMTP Settings**, configure um SMTP próprio (Resend, Brevo, etc.). O SMTP padrão do Supabase envia poucos e-mails por hora e não serve para uso real.
-7. **Backup:** o plano gratuito não tem backup gerenciado. Antes de colocar dados reais, assine o plano **Pro**, que faz backup diário com restauração.
+6. Em **Authentication → Emails → Templates**, troque os modelos para os que estão em português na pasta
+   `supabase/templates/`. Isso é obrigatório: os links do sistema dependem deles.
+   - **Invite user**: assunto `Seu acesso ao sistema de Gestão de Obras`; corpo = conteúdo de `convite.html`.
+   - **Reset password**: assunto `Criar nova senha — Gestão de Obras`; corpo = conteúdo de `recuperacao.html`.
+7. Em **Authentication → Sign In / Providers → Email**, ajuste **Email OTP Expiration** para `86400`
+   (24 horas), para que o convite não expire antes da pessoa abrir o e-mail.
+8. Em **Authentication → Emails → SMTP Settings**, configure um SMTP próprio (Resend, Brevo, etc.). O SMTP padrão do Supabase envia poucos e-mails por hora e não serve para uso real.
+9. **Backup:** o plano gratuito não tem backup gerenciado. Antes de colocar dados reais, assine o plano **Pro**, que faz backup diário com restauração.
 
 ### 2. Vercel
 

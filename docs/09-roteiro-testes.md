@@ -5,7 +5,10 @@ A senha de todos os usuários de teste fica no topo de `supabase/seed.sql`.
 Os e-mails enviados (convites e recuperação de senha) aparecem em http://localhost:54324.
 
 Para voltar o banco ao estado inicial a qualquer momento, rode `npx supabase db reset`.
-Isso apaga tudo o que você criou durante o teste.
+Isso apaga tudo o que você criou durante o teste e invalida os links dos e-mails antigos.
+
+Links de e-mail: use sempre o e-mail **mais recente** (o primeiro da lista no Mailpit). Cada link funciona uma vez
+e vale 24 horas. Na recuperação de senha, o e-mail só é enviado se o usuário existir.
 
 Dica: use uma janela anônima para cada usuário. Assim dá para ficar logado com dois perfis ao mesmo tempo, por exemplo o campo lançando e o gestor aprovando.
 

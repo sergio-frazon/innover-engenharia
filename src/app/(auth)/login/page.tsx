@@ -5,7 +5,7 @@ export const metadata: Metadata = { title: "Entrar" }
 
 const MOTIVOS: Record<string, string> = {
   inativo: "Seu acesso está desativado. Fale com o administrador.",
-  link: "O link é inválido ou expirou. Peça um novo.",
+  link: "Este link já foi usado ou expirou. Cada link funciona uma única vez: peça um novo.",
 }
 
 export default async function PaginaLogin({ searchParams }: { searchParams: Promise<{ voltar?: string; motivo?: string }> }) {
