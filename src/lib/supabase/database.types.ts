@@ -1203,6 +1203,9 @@ isOneToOne: false
 "rejeitar_medicao":
 { Args: { "p_comentario": string,"p_medicao": string }; Returns: undefined
                            },
+"salvar_atividade_cronograma":
+{ Args: { "p_ajustes"?: Json,"p_fim": string,"p_inicio": string,"p_predecessores"?: (string)[],"p_servico": string,"p_versao": string }; Returns: undefined
+                           },
 "servicos_pode_desativar":
 { Args: { "p_servico": string }; Returns: boolean
                            },
