@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BotaoEnviar, Campo, ErroFormulario, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
+import { Formulario, BotaoEnviar, Campo, ErroFormulario, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
 import { Confirmar } from "@/components/comum/confirmar"
 import { TomBadge } from "@/components/comum/status"
 import { PAPEIS, type Papel } from "@/lib/rotulos"
@@ -25,7 +25,7 @@ function FormUsuario({ usuario, obras, aoConcluir }: { usuario?: LinhaUsuario; o
   useRetornoAcao(estado, { onSucesso: aoConcluir })
 
   return (
-    <form action={acao} className="grid gap-4">
+    <Formulario acao={acao} estado={estado} className="grid gap-4">
       <ErroFormulario estado={estado} />
       {usuario && <input type="hidden" name="id" value={usuario.id} />}
       <Campo rotulo="Nome" nome="nome" erro={erroCampo(estado, "nome")} obrigatorio>
@@ -73,7 +73,7 @@ function FormUsuario({ usuario, obras, aoConcluir }: { usuario?: LinhaUsuario; o
         )}
       </fieldset>
       <BotaoEnviar>{usuario ? "Salvar" : "Enviar convite"}</BotaoEnviar>
-    </form>
+    </Formulario>
   )
 }
 
@@ -100,7 +100,7 @@ export function ListaUsuarios({ usuarios, obras, meuId }: { usuarios: LinhaUsuar
         </Button>
       </div>
 
-      <div className="hidden overflow-x-auto rounded-lg border bg-white md:block">
+      <div className="hidden overflow-x-auto rounded-lg border bg-white xl:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -134,7 +134,7 @@ export function ListaUsuarios({ usuarios, obras, meuId }: { usuarios: LinhaUsuar
         </Table>
       </div>
 
-      <ul className="grid gap-3 md:hidden">
+      <ul className="grid gap-3 xl:hidden">
         {filtrados.map((u) => (
           <li key={u.id} className={`rounded-lg border bg-white p-4 ${u.ativo ? "" : "opacity-60"}`}>
             <div className="flex items-start justify-between gap-2">

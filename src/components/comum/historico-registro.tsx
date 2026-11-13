@@ -5,7 +5,7 @@ import { History, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { dataHora } from "@/lib/format"
-import { ACOES, resumoMudancas } from "@/lib/auditoria"
+import { ACOES } from "@/lib/auditoria"
 import { historicoDoRegistro } from "@/app/(app)/obras/actions"
 
 type Item = Awaited<ReturnType<typeof historicoDoRegistro>>[number]
@@ -43,7 +43,7 @@ export function HistoricoRegistro({ tabela, registroId, titulo, compacto }: { ta
                   </p>
                   <p className="text-xs text-muted-foreground">{dataHora(i.em)}</p>
                   <ul className="mt-1 text-xs text-slate-600">
-                    {resumoMudancas(i.acao, i.antes, i.depois).map((m, k) => (
+                    {i.mudancas.map((m, k) => (
                       <li key={k}>{m}</li>
                     ))}
                   </ul>

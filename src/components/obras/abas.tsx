@@ -18,7 +18,7 @@ export function AbasObra({ abas, base }: { abas: { href: string; rotulo: string 
                 aria-current={ativo ? "page" : undefined}
                 className={cn(
                   "-mb-px inline-flex min-h-11 items-center border-b-2 px-3 text-sm font-medium whitespace-nowrap transition-colors",
-                  ativo ? "border-blue-600 text-blue-700" : "border-transparent text-slate-600 hover:text-slate-900",
+                  ativo ? "border-blue-500 font-semibold text-slate-900" : "border-transparent text-slate-600 hover:border-slate-300 hover:text-slate-900",
                 )}
               >
                 {a.rotulo}

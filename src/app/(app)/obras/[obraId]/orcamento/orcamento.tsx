@@ -7,7 +7,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { BotaoEnviar, Campo, ErroFormulario, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
+import { Formulario, BotaoEnviar, Campo, ErroFormulario, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
 import { useAcao } from "@/components/comum/use-acao"
 import { Confirmar } from "@/components/comum/confirmar"
 import { EstadoVazio } from "@/components/comum/pagina"
@@ -194,7 +194,7 @@ function FormItem({
   const total = (lerNumero(qtd) ?? 0) * (lerNumero(vu) ?? 0)
 
   return (
-    <form action={acao} className="grid gap-4 sm:grid-cols-4">
+    <Formulario acao={acao} estado={estado} className="grid gap-4 sm:grid-cols-4">
       <div className="sm:col-span-4">
         <ErroFormulario estado={estado} />
       </div>
@@ -256,7 +256,7 @@ function FormItem({
       <div className="sm:col-span-4">
         <BotaoEnviar>Salvar item</BotaoEnviar>
       </div>
-    </form>
+    </Formulario>
   )
 }
 

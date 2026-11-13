@@ -35,7 +35,7 @@ export function Cabecalho({
             ))}
           </nav>
         )}
-        <h1 className="text-2xl font-semibold tracking-tight text-balance">{titulo}</h1>
+        <h1 className="text-[1.75rem] leading-tight font-bold text-balance text-slate-900">{titulo}</h1>
         {descricao && <div className="mt-1 text-sm text-muted-foreground">{descricao}</div>}
       </div>
       {acoes && <div className="flex flex-wrap gap-2">{acoes}</div>}
@@ -56,7 +56,7 @@ export function EstadoVazio({
   icone?: React.ReactNode
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed bg-white px-6 py-12 text-center">
+    <div className="flex flex-col items-center justify-center rounded-md border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
       {icone && <div className="mb-3 text-muted-foreground">{icone}</div>}
       <p className="font-medium">{titulo}</p>
       {descricao && <p className="mt-1 max-w-md text-sm text-muted-foreground">{descricao}</p>}
@@ -78,10 +78,10 @@ export function Secao({
   className?: string
 }) {
   return (
-    <section className={cn("rounded-lg border bg-white", className)}>
+    <section className={cn("rounded-md border bg-white", className)}>
       {(titulo || acoes) && (
         <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
-          {titulo && <h2 className="font-semibold">{titulo}</h2>}
+          {titulo && <h2 className="text-[1.05rem] font-bold text-slate-900">{titulo}</h2>}
           {acoes && <div className="flex flex-wrap gap-2">{acoes}</div>}
         </div>
       )}
@@ -106,9 +106,10 @@ export function Indicador({
 }) {
   const corValor = tom === "vermelho" ? "text-red-700" : tom === "verde" ? "text-emerald-700" : tom === "ambar" ? "text-amber-700" : ""
   const conteudo = (
-    <div className="h-full rounded-lg border bg-white p-4 transition-colors hover:border-slate-300">
+    <div className={cn("@container h-full rounded-md border border-l-[3px] bg-white p-4 transition-colors", href ? "border-l-blue-500 hover:border-slate-300 hover:border-l-blue-600" : "border-l-slate-300")}>
       <p className="text-sm text-muted-foreground">{rotulo}</p>
-      <p className={cn("mt-1 text-2xl font-semibold tabular-nums", corValor)}>{valor}</p>
+      {/* O tamanho acompanha a largura do cartão: valores em R$ não podem estourar em grades de 4 colunas */}
+      <p className={cn("mt-1 font-[family-name:var(--font-display)] text-[clamp(1.15rem,13cqi,1.7rem)] leading-tight font-bold whitespace-nowrap tabular-nums [font-stretch:88%]", corValor)}>{valor}</p>
       {detalhe && <div className="mt-1 text-xs text-muted-foreground">{detalhe}</div>}
     </div>
   )

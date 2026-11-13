@@ -3,7 +3,7 @@
 import { useActionState } from "react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { BotaoEnviar, Campo, ErroFormulario, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
+import { Formulario, BotaoEnviar, Campo, ErroFormulario, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
 import { SITUACAO_OBRA } from "@/lib/rotulos"
 import { criarObra, editarObra } from "@/app/(app)/obras/actions"
 import type { Tables } from "@/lib/supabase/database.types"
@@ -27,7 +27,7 @@ export function FormObra({
   const e = (c: string) => erroCampo(estado, c)
 
   return (
-    <form action={acao} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <Formulario acao={acao} estado={estado} limparAoSalvar={false} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <div className="sm:col-span-2 lg:col-span-4">
         <ErroFormulario estado={estado} />
       </div>
@@ -105,6 +105,6 @@ export function FormObra({
       <div className="sm:col-span-2 lg:col-span-4">
         <BotaoEnviar>{obra ? "Salvar alterações" : "Cadastrar obra"}</BotaoEnviar>
       </div>
-    </form>
+    </Formulario>
   )
 }

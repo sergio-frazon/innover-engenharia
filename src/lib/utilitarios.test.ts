@@ -5,6 +5,7 @@ import { mensagemDeErro } from "./erros"
 import { gerarCsv } from "./csv"
 import { caminhoInterno } from "./redirecionamento"
 import { dividirParcelas, somaParcelas } from "./parcelas"
+import { idsReferenciados, resumoMudancas, rotulo } from "./auditoria"
 
 describe("format", () => {
   it("moeda em reais", () => {
@@ -104,5 +105,43 @@ describe("redirecionamento", () => {
     expect(caminhoInterno("https://site.com")).toBe("/painel")
     expect(caminhoInterno("/a\nb")).toBe("/painel")
     expect(caminhoInterno(null)).toBe("/painel")
+  })
+})
+
+describe("auditoria", () => {
+  const ana = "10000000-0000-0000-0000-000000000001"
+
+  it("nomes de coluna legíveis e com acento", () => {
+    expect(rotulo("duracao_dias")).toBe("duração (dias)")
+    expect(rotulo("inicio_previsto")).toBe("início previsto")
+    expect(rotulo("responsavel_id")).toBe("responsável")
+  })
+
+  it("valores sem UUID, ISO nem número cru", () => {
+    const linhas = resumoMudancas(
+      "UPDATE",
+      { status: "rascunho", aprovada_em: null, aprovada_por: null, valor_total: 100, fim_previsto: "2026-11-20" },
+      { status: "aguardando_conferencia", aprovada_em: "2026-11-12T23:10:41.679906+00:00", aprovada_por: ana, valor_total: 1234.5, fim_previsto: "2026-11-25" },
+      { [ana]: "Ana Administradora" },
+    ).map((l) => l.replace(/\s/g, " "))
+    expect(linhas).toEqual([
+      "situação: rascunho → aguardando conferência",
+      "aprovada em: vazio → 12/11/2026, 20:10",
+      "aprovada por: vazio → Ana Administradora",
+      "valor total: R$ 100,00 → R$ 1.234,50",
+      "fim previsto: 20/11/2026 → 25/11/2026",
+    ])
+  })
+
+  it("status de uma palavra também ganha acento", () => {
+    expect(resumoMudancas("UPDATE", { status: "aprovada" }, { status: "substituida" })).toEqual(["situação: aprovada → substituída"])
+  })
+
+  it("id desconhecido não aparece cru", () => {
+    expect(resumoMudancas("UPDATE", { etapa_id: null }, { etapa_id: ana })).toEqual(["etapa: vazio → outro registro"])
+  })
+
+  it("coleta os ids referenciados, ignorando colunas técnicas", () => {
+    expect(idsReferenciados([{ antes: { id: ana, obra_id: ana }, depois: { aprovada_por: ana, nome: "x" } }])).toEqual([ana])
   })
 })

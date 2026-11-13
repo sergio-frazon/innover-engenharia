@@ -2,14 +2,14 @@
 
 import { useActionState, useRef } from "react"
 import { Input } from "@/components/ui/input"
-import { BotaoEnviar, Campo, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
+import { Formulario, BotaoEnviar, Campo, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
 import { salvarPerfil, trocarSenha } from "./actions"
 
 export function FormPerfil({ nome, telefone }: { nome: string; telefone: string | null }) {
   const [estado, acao] = useActionState(salvarPerfil, null)
   useRetornoAcao(estado)
   return (
-    <form action={acao} className="grid gap-4 sm:grid-cols-2">
+    <Formulario acao={acao} estado={estado} limparAoSalvar={false} className="grid gap-4 sm:grid-cols-2">
       <Campo rotulo="Nome" nome="nome" erro={erroCampo(estado, "nome")} obrigatorio>
         <Input id="nome" name="nome" defaultValue={nome} required />
       </Campo>
@@ -19,7 +19,7 @@ export function FormPerfil({ nome, telefone }: { nome: string; telefone: string 
       <div className="sm:col-span-2">
         <BotaoEnviar>Salvar</BotaoEnviar>
       </div>
-    </form>
+    </Formulario>
   )
 }
 
@@ -28,7 +28,7 @@ export function FormSenha() {
   const [estado, acao] = useActionState(trocarSenha, null)
   useRetornoAcao(estado, { onSucesso: () => ref.current?.reset() })
   return (
-    <form ref={ref} action={acao} className="grid gap-4 sm:grid-cols-3">
+    <Formulario ref={ref} acao={acao} estado={estado} className="grid gap-4 sm:grid-cols-3">
       <Campo rotulo="Senha atual" nome="senha_atual" erro={erroCampo(estado, "senha_atual")}>
         <Input id="senha_atual" name="senha_atual" type="password" autoComplete="current-password" required />
       </Campo>
@@ -41,6 +41,6 @@ export function FormSenha() {
       <div className="sm:col-span-3">
         <BotaoEnviar>Alterar senha</BotaoEnviar>
       </div>
-    </form>
+    </Formulario>
   )
 }

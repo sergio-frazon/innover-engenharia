@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { BotaoEnviar, Campo, ErroFormulario, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
+import { Formulario, BotaoEnviar, Campo, ErroFormulario, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
 import { Confirmar } from "@/components/comum/confirmar"
 import { StatusBadge } from "@/components/comum/status"
 import { data as fmtData, diferencaDias, percentual, somarDias } from "@/lib/format"
@@ -193,7 +193,7 @@ function FormAtividade({
   const duracao = inicio && fim && fim >= inicio ? diferencaDias(inicio, fim) + 1 : null
 
   return (
-    <form action={acao} className="grid gap-4">
+    <Formulario acao={acao} estado={estado} className="grid gap-4">
       <ErroFormulario estado={estado} />
       <input type="hidden" name="obra_id" value={obraId} />
       <input type="hidden" name="versao_id" value={versaoId} />
@@ -259,7 +259,7 @@ function FormAtividade({
           </Button>
         )}
       </div>
-    </form>
+    </Formulario>
   )
 }
 

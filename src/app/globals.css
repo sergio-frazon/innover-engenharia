@@ -4,10 +4,40 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Identidade Innover: azul da cobertura da logo (#4b92c6) e neutros de aço. Redefinir as escalas
+   blue/slate recolore de uma vez todas as telas que já usam essas classes. */
+@theme {
+  --color-blue-50: oklch(0.972 0.012 242);
+  --color-blue-100: oklch(0.94 0.028 242);
+  --color-blue-200: oklch(0.885 0.052 242);
+  --color-blue-300: oklch(0.805 0.08 243);
+  --color-blue-400: oklch(0.71 0.105 244);
+  --color-blue-500: oklch(0.635 0.112 245);
+  --color-blue-600: oklch(0.545 0.112 247);
+  --color-blue-700: oklch(0.465 0.102 248);
+  --color-blue-800: oklch(0.395 0.086 250);
+  --color-blue-900: oklch(0.33 0.068 252);
+  --color-blue-950: oklch(0.245 0.05 254);
+
+  --color-slate-50: oklch(0.975 0.004 250);
+  --color-slate-100: oklch(0.948 0.007 250);
+  --color-slate-200: oklch(0.905 0.01 250);
+  --color-slate-300: oklch(0.84 0.014 250);
+  --color-slate-400: oklch(0.69 0.02 250);
+  --color-slate-500: oklch(0.55 0.024 250);
+  --color-slate-600: oklch(0.45 0.026 250);
+  --color-slate-700: oklch(0.375 0.027 250);
+  --color-slate-800: oklch(0.29 0.027 250);
+  --color-slate-900: oklch(0.235 0.027 250);
+  --color-slate-950: oklch(0.17 0.022 250);
+}
+
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-archivo);
+  --font-display: var(--font-archivo);
   --font-mono: ui-monospace, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -48,38 +78,38 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --radius: 0.375rem;
+  --background: oklch(0.968 0.005 250);
+  --foreground: oklch(0.21 0.026 250);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.21 0.026 250);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --popover-foreground: oklch(0.21 0.026 250);
+  --primary: oklch(0.255 0.032 250);
+  --primary-foreground: oklch(0.985 0.003 250);
+  --secondary: oklch(0.945 0.008 250);
+  --secondary-foreground: oklch(0.255 0.032 250);
+  --muted: oklch(0.948 0.007 250);
+  --muted-foreground: oklch(0.5 0.024 250);
+  --accent: oklch(0.945 0.02 242);
+  --accent-foreground: oklch(0.255 0.032 250);
+  --destructive: oklch(0.56 0.2 27);
+  --border: oklch(0.895 0.011 250);
+  --input: oklch(0.86 0.013 250);
+  --ring: oklch(0.635 0.112 245);
+  --chart-1: oklch(0.545 0.112 247);
+  --chart-2: oklch(0.71 0.105 244);
+  --chart-3: oklch(0.375 0.027 250);
+  --chart-4: oklch(0.72 0.14 75);
+  --chart-5: oklch(0.69 0.02 250);
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.21 0.026 250);
+  --sidebar-primary: oklch(0.255 0.032 250);
+  --sidebar-primary-foreground: oklch(0.985 0.003 250);
+  --sidebar-accent: oklch(0.948 0.007 250);
+  --sidebar-accent-foreground: oklch(0.255 0.032 250);
+  --sidebar-border: oklch(0.895 0.011 250);
+  --sidebar-ring: oklch(0.635 0.112 245);
 }
 
 .dark {
@@ -123,4 +153,14 @@
   body {
     @apply bg-background text-foreground;
   }
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    font-stretch: 88%;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Recorte na inclinação da cobertura da logo: marca o item ativo do menu. */
+@utility recorte-telhado {
+  clip-path: polygon(0 0, 100% 0, calc(100% - 0.6rem) 100%, 0 100%);
 }

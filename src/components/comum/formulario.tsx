@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { createContext, useContext, useEffect, useRef, useTransition } from "react"
 import { useFormStatus } from "react-dom"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
@@ -45,6 +45,53 @@ export function Campo({
   )
 }
 
+const FormularioPendente = createContext<boolean | undefined>(undefined)
+
+/**
+ * <form> ligado a uma Server Action via `useActionState`.
+ *
+ * Com `<form action={...}>` o React 19 limpa todos os campos ao fim de QUALQUER envio, inclusive quando o
+ * servidor recusa (CPF inválido, duplicidade...), e a pessoa perde o que digitou. Aqui o envio passa por
+ * `onSubmit` + `startTransition`, e os campos só são limpos quando o resultado é de sucesso.
+ */
+export function Formulario({
+  acao,
+  estado,
+  limparAoSalvar = true,
+  ref,
+  ...props
+}: Omit<React.ComponentProps<"form">, "action" | "onSubmit"> & {
+  acao: (dados: FormData) => void
+  estado: Resultado | null
+  limparAoSalvar?: boolean
+}) {
+  const interno = useRef<HTMLFormElement | null>(null)
+  const [pendente, iniciar] = useTransition()
+
+  useEffect(() => {
+    if (estado?.ok && limparAoSalvar) interno.current?.reset()
+  }, [estado, limparAoSalvar])
+
+  function aoEnviar(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const submissor = (e.nativeEvent as SubmitEvent).submitter
+    const dados = new FormData(e.currentTarget, submissor)
+    iniciar(() => acao(dados))
+  }
+
+  function ligarRef(no: HTMLFormElement | null) {
+    interno.current = no
+    if (typeof ref === "function") ref(no)
+    else if (ref) ref.current = no
+  }
+
+  return (
+    <FormularioPendente.Provider value={pendente}>
+      <form ref={ligarRef} onSubmit={aoEnviar} {...props} />
+    </FormularioPendente.Provider>
+  )
+}
+
 /** Botão de envio que se desabilita e mostra "carregando" enquanto o formulário está sendo enviado. */
 export function BotaoEnviar({
   children,
@@ -60,7 +107,8 @@ export function BotaoEnviar({
   size?: React.ComponentProps<typeof Button>["size"]
 }) {
   const { pending } = useFormStatus()
-  const carregando = pendente ?? pending
+  const doFormulario = useContext(FormularioPendente)
+  const carregando = pendente ?? doFormulario ?? pending
   return (
     <Button type="submit" disabled={carregando} className={cn("min-h-11 sm:min-h-9", className)} variant={variant} size={size}>
       {carregando && <Loader2 className="animate-spin" />}

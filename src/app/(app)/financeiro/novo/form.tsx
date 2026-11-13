@@ -6,7 +6,7 @@ import { AlertTriangle, Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { BotaoEnviar, Campo, ErroFormulario, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
+import { Formulario, BotaoEnviar, Campo, ErroFormulario, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
 import { data as fmtData, lerNumero, moeda, numeroParaInput } from "@/lib/format"
 import { dividirParcelas, somaParcelas } from "@/lib/parcelas"
 import { NATUREZA } from "@/lib/rotulos"
@@ -67,7 +67,7 @@ export function FormLancamento({ tipoInicial, obraInicial, categorias, pessoas, 
   const diferenca = valor ? Math.round((valor - soma) * 100) / 100 : 0
 
   return (
-    <form action={acao} className="grid gap-5">
+    <Formulario acao={acao} estado={estado} className="grid gap-5">
       <ErroFormulario estado={estado} />
       <input type="hidden" name="parcelas" value={JSON.stringify(lista)} />
 
@@ -245,6 +245,6 @@ export function FormLancamento({ tipoInicial, obraInicial, categorias, pessoas, 
       <div>
         <BotaoEnviar>Salvar lançamento</BotaoEnviar>
       </div>
-    </form>
+    </Formulario>
   )
 }

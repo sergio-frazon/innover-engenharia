@@ -177,6 +177,8 @@ async function Comparacao({
             return { s, a, r, d: r - a }
           })
           .filter((l) => l.a !== 0 || l.r !== 0)
+          // Mesma ordem do CSV: pelo código (1.1, 1.2, 2.1...), sem misturar etapas
+          .sort((x, y) => x.s.codigo.localeCompare(y.s.codigo, "pt-BR", { numeric: true }))
       : []
 
   const somaPrev = (custo ?? []).reduce((a, c) => a + Number(c.previsto), 0)

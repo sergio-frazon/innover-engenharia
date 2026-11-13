@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server"
 import { dataOpcional, falhaValidacao, texto, textoOpcional, uuid, uuidOpcional, type Resultado } from "@/lib/acoes"
 import { falha, GESTAO, revalidarObra } from "@/lib/acao-servidor"
 import { SEM_PERMISSAO, usuarioDaAcao } from "@/lib/auth"
+import { carregarNomes, idsReferenciados, resumoMudancas } from "@/lib/auditoria"
 
 const CODIGO_EM_USO: Resultado = { ok: false, erro: "Já existe uma obra com este código.", campos: { codigo: "Código em uso." } }
 
@@ -116,8 +117,13 @@ export async function historicoDoRegistro(tabela: string, registroId: string) {
     .eq("registro_id", registroId)
     .order("em", { ascending: false })
     .limit(100)
-  const ids = [...new Set((data ?? []).map((a) => a.usuario_id).filter(Boolean))] as string[]
-  const { data: perfis } = ids.length ? await supabase.from("perfis").select("id, nome").in("id", ids) : { data: [] }
-  const nomes = new Map((perfis ?? []).map((p) => [p.id, p.nome]))
-  return (data ?? []).map((a) => ({ ...a, usuario: a.usuario_id ? (nomes.get(a.usuario_id) ?? "Usuário") : "Sistema" }))
+  const autores = (data ?? []).map((a) => a.usuario_id).filter(Boolean) as string[]
+  const nomes = await carregarNomes(supabase, [...new Set([...autores, ...idsReferenciados(data ?? [])])])
+  return (data ?? []).map((a) => ({
+    id: a.id,
+    acao: a.acao,
+    em: a.em,
+    usuario: a.usuario_id ? (nomes[a.usuario_id] ?? "Usuário") : "Sistema",
+    mudancas: resumoMudancas(a.acao, a.antes, a.depois, nomes),
+  }))
 }

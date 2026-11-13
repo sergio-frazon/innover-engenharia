@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { BotaoEnviar, Campo, ErroFormulario, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
+import { Formulario, BotaoEnviar, Campo, ErroFormulario, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
 import { useAcao } from "@/components/comum/use-acao"
 import { HistoricoRegistro } from "@/components/comum/historico-registro"
 import { EstadoVazio } from "@/components/comum/pagina"
@@ -40,7 +40,7 @@ function FormEtapa({ obraId, etapa, codigo, pessoas, aoConcluir }: { obraId: str
   const [estado, acao] = useActionState(salvarEtapa, null)
   useRetornoAcao(estado, { onSucesso: aoConcluir })
   return (
-    <form action={acao} className="grid gap-4 sm:grid-cols-4">
+    <Formulario acao={acao} estado={estado} className="grid gap-4 sm:grid-cols-4">
       <div className="sm:col-span-4">
         <ErroFormulario estado={estado} />
       </div>
@@ -65,7 +65,7 @@ function FormEtapa({ obraId, etapa, codigo, pessoas, aoConcluir }: { obraId: str
       <div className="sm:col-span-4">
         <BotaoEnviar>Salvar</BotaoEnviar>
       </div>
-    </form>
+    </Formulario>
   )
 }
 
@@ -90,7 +90,7 @@ function FormServico({
   useRetornoAcao(estado, { onSucesso: aoConcluir })
   const e = (c: string) => erroCampo(estado, c)
   return (
-    <form action={acao} className="grid gap-4 sm:grid-cols-4">
+    <Formulario acao={acao} estado={estado} className="grid gap-4 sm:grid-cols-4">
       <div className="sm:col-span-4">
         <ErroFormulario estado={estado} />
       </div>
@@ -143,7 +143,7 @@ function FormServico({
       <div className="sm:col-span-4">
         <BotaoEnviar>Salvar</BotaoEnviar>
       </div>
-    </form>
+    </Formulario>
   )
 }
 
@@ -166,6 +166,10 @@ export function Planejamento({
   podeVerHistorico: boolean
 }) {
   const [dialogo, setDialogo] = useState<Dialogo>(null)
+  // Guarda o último diálogo aberto: durante a animação de fechar o título não pode trocar para outro texto
+  const [ultimoDialogo, setUltimoDialogo] = useState<Dialogo>(null)
+  if (dialogo && dialogo !== ultimoDialogo) setUltimoDialogo(dialogo)
+  const exibido = dialogo ?? ultimoDialogo
   const [mostrarInativos, setMostrarInativos] = useState(false)
   const { pendente, executar } = useAcao()
 
@@ -344,11 +348,11 @@ export function Planejamento({
         <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>
-              {dialogo?.tipo === "etapa"
-                ? dialogo.etapa
+              {exibido?.tipo === "etapa"
+                ? exibido.etapa
                   ? "Editar etapa"
                   : "Nova etapa"
-                : dialogo?.tipo === "servico" && dialogo.servico
+                : exibido?.tipo === "servico" && exibido.servico
                   ? "Editar serviço"
                   : "Novo serviço"}
             </DialogTitle>

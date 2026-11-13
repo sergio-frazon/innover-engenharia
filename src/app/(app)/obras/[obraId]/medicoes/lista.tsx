@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { BotaoEnviar, Campo, ErroFormulario, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
+import { Formulario, BotaoEnviar, Campo, ErroFormulario, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
 import { useAcao } from "@/components/comum/use-acao"
 import { Confirmar } from "@/components/comum/confirmar"
 import { EstadoVazio } from "@/components/comum/pagina"
@@ -42,7 +42,7 @@ function FormAvulsa({ obraId, servicos, medicao, hoje, aoConcluir }: { obraId: s
   const e = (c: string) => erroCampo(estado, c)
 
   return (
-    <form action={acao} className="grid gap-4 sm:grid-cols-2">
+    <Formulario acao={acao} estado={estado} className="grid gap-4 sm:grid-cols-2">
       <div className="sm:col-span-2">
         <ErroFormulario estado={estado} />
       </div>
@@ -99,7 +99,7 @@ function FormAvulsa({ obraId, servicos, medicao, hoje, aoConcluir }: { obraId: s
       <div className="sm:col-span-2">
         <BotaoEnviar>Salvar</BotaoEnviar>
       </div>
-    </form>
+    </Formulario>
   )
 }
 

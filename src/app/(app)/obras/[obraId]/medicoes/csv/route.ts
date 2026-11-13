@@ -23,7 +23,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (f.get("origem")) consulta = consulta.eq("origem", f.get("origem")!)
   if (f.get("de")) consulta = consulta.gte("periodo_fim", f.get("de")!)
   if (f.get("ate")) consulta = consulta.lte("periodo_inicio", f.get("ate")!)
-  const { data } = await consulta
+  const [{ data }, { data: obra }] = await Promise.all([consulta, supabase.from("obras").select("codigo").eq("id", obraId).maybeSingle()])
 
   const csv = gerarCsv(
     [
@@ -42,5 +42,5 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     ],
     data ?? [],
   )
-  return respostaCsv(csv, "medicoes.csv")
+  return respostaCsv(csv, `medicoes-${obra?.codigo ?? "obra"}.csv`)
 }

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { BotaoEnviar, Campo, ErroFormulario, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
+import { Formulario, BotaoEnviar, Campo, ErroFormulario, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
 import { useAcao } from "@/components/comum/use-acao"
 import { Confirmar } from "@/components/comum/confirmar"
 import { StatusBadge } from "@/components/comum/status"
@@ -108,7 +108,7 @@ function FormLinha({ acao, children, rotulo = "Adicionar" }: { acao: (p: Resulta
   const [estado, enviar] = useActionState(acao, null)
   useRetornoAcao(estado, { onSucesso: () => ref.current?.reset() })
   return (
-    <form ref={ref} action={enviar} className="mt-3 grid gap-3 rounded-md border border-dashed bg-slate-50/60 p-3 sm:grid-cols-6">
+    <Formulario ref={ref} acao={enviar} estado={estado} className="mt-3 grid gap-3 rounded-md border border-dashed bg-slate-50/60 p-3 sm:grid-cols-6">
       <div className="sm:col-span-6">
         <ErroFormulario estado={estado && !estado.ok && estado.campos ? estado : null} />
       </div>
@@ -118,7 +118,7 @@ function FormLinha({ acao, children, rotulo = "Adicionar" }: { acao: (p: Resulta
           <Plus /> {rotulo}
         </BotaoEnviar>
       </div>
-    </form>
+    </Formulario>
   )
 }
 
@@ -389,7 +389,7 @@ function Cabecalho({ obraId, diario, podeEditar }: { obraId: string; diario: Dad
   }, [sujo])
 
   return (
-    <form action={acao} onChange={() => setSujo(true)} className="rounded-lg border bg-white">
+    <Formulario acao={acao} estado={estado} limparAoSalvar={false} onChange={() => setSujo(true)} className="rounded-lg border bg-white">
       <header className="flex items-center justify-between gap-2 border-b px-4 py-3">
         <h2 className="font-semibold">Dia de trabalho</h2>
         {sujo && <span className="text-xs font-medium text-amber-700">Alterações não salvas</span>}
@@ -431,7 +431,7 @@ function Cabecalho({ obraId, diario, podeEditar }: { obraId: string; diario: Dad
           </div>
         )}
       </fieldset>
-    </form>
+    </Formulario>
   )
 }
 
@@ -530,7 +530,7 @@ function FormMedicao({
   const excede = !!s && outras + q > s.prevista
 
   return (
-    <form action={acao} className="grid gap-4">
+    <Formulario acao={acao} estado={estado} className="grid gap-4">
       <ErroFormulario estado={estado} />
       {medicao && <input type="hidden" name="id" value={medicao.id} />}
       <input type="hidden" name="diario_id" value={diarioId} />
@@ -581,7 +581,7 @@ function FormMedicao({
         <Textarea id="observacao" name="observacao" defaultValue={medicao?.observacao ?? ""} rows={2} />
       </Campo>
       <BotaoEnviar className="w-full sm:w-auto">Salvar</BotaoEnviar>
-    </form>
+    </Formulario>
   )
 }
 

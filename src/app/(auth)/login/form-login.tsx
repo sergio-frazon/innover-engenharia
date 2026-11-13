@@ -4,13 +4,13 @@ import Link from "next/link"
 import { useActionState } from "react"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { BotaoEnviar, Campo, ErroFormulario, erroCampo } from "@/components/comum/formulario"
+import { Formulario, BotaoEnviar, Campo, ErroFormulario, erroCampo } from "@/components/comum/formulario"
 import { entrar } from "../actions"
 
 export function FormLogin({ voltar, aviso }: { voltar?: string; aviso?: string }) {
   const [estado, acao] = useActionState(entrar, null)
   return (
-    <form action={acao} className="grid gap-4">
+    <Formulario acao={acao} estado={estado} className="grid gap-4">
       {aviso && !estado && (
         <Alert>
           <AlertDescription>{aviso}</AlertDescription>
@@ -28,6 +28,6 @@ export function FormLogin({ voltar, aviso }: { voltar?: string; aviso?: string }
       <Link href="/recuperar-senha" className="text-center text-sm text-blue-700 hover:underline">
         Esqueci minha senha
       </Link>
-    </form>
+    </Formulario>
   )
 }

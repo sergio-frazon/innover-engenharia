@@ -11,6 +11,15 @@ import { data, dataHora, moeda } from "@/lib/format"
 import { FORMA_PAGAMENTO, NATUREZA, SITUACAO_PARCELA } from "@/lib/rotulos"
 import { AcoesLancamento, EstornarBaixa } from "./acoes"
 
+export async function generateMetadata({ params }: { params: Promise<{ lancamentoId: string }> }) {
+  const { lancamentoId } = await params
+  if (!/^[0-9a-f-]{36}$/i.test(lancamentoId)) return {}
+  // O RLS decide: quem não pode ver o lançamento recebe o título genérico
+  const supabase = await createClient()
+  const { data: l } = await supabase.from("lancamentos").select("descricao").eq("id", lancamentoId).maybeSingle()
+  return l ? { title: l.descricao } : {}
+}
+
 export default async function DetalheLancamento({ params }: { params: Promise<{ lancamentoId: string }> }) {
   const { lancamentoId } = await params
   const usuario = await exigirPapel("admin", "financeiro", "gestor")

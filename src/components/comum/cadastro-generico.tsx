@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { BotaoEnviar, Campo, ErroFormulario, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
+import { Formulario, BotaoEnviar, Campo, ErroFormulario, erroCampo, useRetornoAcao } from "@/components/comum/formulario"
 import { Confirmar } from "@/components/comum/confirmar"
 import { EstadoVazio } from "@/components/comum/pagina"
 import { TomBadge } from "@/components/comum/status"
@@ -86,11 +86,11 @@ function CampoForm({ def, valor, estado }: { def: DefCampo; valor: string | bool
   )
 }
 
-function Formulario({ campos, linha, salvar, aoConcluir }: { campos: DefCampo[]; linha?: LinhaCadastro; salvar: Props["salvar"]; aoConcluir: () => void }) {
+function FormCadastro({ campos, linha, salvar, aoConcluir }: { campos: DefCampo[]; linha?: LinhaCadastro; salvar: Props["salvar"]; aoConcluir: () => void }) {
   const [estado, acao] = useActionState(salvar, null)
   useRetornoAcao(estado, { sucesso: "Salvo.", onSucesso: aoConcluir })
   return (
-    <form action={acao} className="grid gap-4 sm:grid-cols-2">
+    <Formulario acao={acao} estado={estado} className="grid gap-4 sm:grid-cols-2">
       <div className="sm:col-span-2">
         <ErroFormulario estado={estado} />
       </div>
@@ -116,7 +116,7 @@ function Formulario({ campos, linha, salvar, aoConcluir }: { campos: DefCampo[];
       <div className="sm:col-span-2">
         <BotaoEnviar>Salvar</BotaoEnviar>
       </div>
-    </form>
+    </Formulario>
   )
 }
 
@@ -222,7 +222,7 @@ export function CadastroGenerico({ singular, colunas, linhas, campos, salvar, al
             <DialogTitle>{editando === "novo" ? `Novo ${singular.toLowerCase()}` : `Editar ${singular.toLowerCase()}`}</DialogTitle>
           </DialogHeader>
           {editando && (
-            <Formulario
+            <FormCadastro
               key={editando === "novo" ? "novo" : editando.id}
               campos={campos}
               linha={editando === "novo" ? undefined : editando}

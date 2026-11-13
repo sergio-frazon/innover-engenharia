@@ -67,7 +67,7 @@ function ListaMenu({ papel, alertas, aoNavegar }: { papel: Papel; alertas: numbe
     <nav className="flex flex-col gap-5 px-3 py-4">
       {menuDoPapel(papel).map((grupo, i) => (
         <div key={i}>
-          {grupo.titulo && <p className="mb-1 px-2 text-xs font-medium tracking-wide text-slate-500 uppercase">{grupo.titulo}</p>}
+          {grupo.titulo && <p className="mb-1.5 px-2 text-xs font-semibold text-slate-500">{grupo.titulo}</p>}
           <ul className="flex flex-col gap-0.5">
             {grupo.itens.map((item) => {
               const Icone = ICONES[item.icone] ?? LayoutDashboard
@@ -79,11 +79,11 @@ function ListaMenu({ papel, alertas, aoNavegar }: { papel: Papel; alertas: numbe
                     onClick={aoNavegar}
                     aria-current={sel ? "page" : undefined}
                     className={cn(
-                      "flex min-h-10 items-center gap-3 rounded-md px-2 text-sm font-medium transition-colors",
-                      sel ? "bg-blue-50 text-blue-700" : "text-slate-700 hover:bg-slate-100",
+                      "flex min-h-10 items-center gap-3 rounded-l-md px-2.5 text-sm font-medium transition-colors",
+                      sel ? "recorte-telhado bg-slate-900 pr-4 text-white" : "rounded-r-md text-slate-700 hover:bg-slate-100",
                     )}
                   >
-                    <Icone className="size-4 shrink-0" />
+                    <Icone className={cn("size-4 shrink-0", sel && "text-blue-300")} />
                     <span className="flex-1">{item.rotulo}</span>
                     {item.icone === "alertas" && alertas > 0 && (
                       <span className="rounded-full bg-red-600 px-1.5 py-0.5 text-[11px] leading-none font-semibold text-white">{alertas}</span>
@@ -104,7 +104,7 @@ function MenuUsuario({ usuario }: { usuario: Props["usuario"] }) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-auto w-full justify-start gap-3 px-2 py-2 text-left">
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-800">
             {usuario.nome.charAt(0).toUpperCase()}
           </span>
           <span className="min-w-0 flex-1">
@@ -146,10 +146,10 @@ export function Shell({ usuario, alertas, children }: Props) {
   ]
 
   return (
-    <div className="min-h-dvh bg-slate-50 print:bg-white">
+    <div className="min-h-dvh bg-background print:bg-white">
       {/* Computador */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r bg-white lg:flex print:hidden">
-        <Link href="/painel" className="flex h-16 items-center gap-3 border-b px-5">
+        <Link href="/painel" className="flex h-16 items-center gap-3 border-b border-t-4 border-t-blue-500 px-5">
           <Logo className="h-10" prioridade />
           <span className="text-xs leading-tight font-medium text-muted-foreground">Gestão de Obras</span>
         </Link>
@@ -162,7 +162,7 @@ export function Shell({ usuario, alertas, children }: Props) {
       </aside>
 
       {/* Celular: topo */}
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-white px-2 lg:hidden print:hidden">
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-t-4 border-t-blue-500 bg-white px-2 lg:hidden print:hidden">
         <Button variant="ghost" size="icon-lg" onClick={() => setAberto(true)} aria-label="Abrir menu">
           <Menu className="size-5" />
         </Button>
@@ -199,7 +199,10 @@ export function Shell({ usuario, alertas, children }: Props) {
             <Link
               key={href}
               href={href}
-              className={cn("relative flex min-h-14 flex-col items-center justify-center gap-0.5 text-xs", sel ? "text-blue-700" : "text-slate-600")}
+              className={cn(
+                "relative flex min-h-14 flex-col items-center justify-center gap-0.5 border-t-2 text-xs",
+                sel ? "border-blue-500 font-semibold text-slate-900" : "border-transparent text-slate-600",
+              )}
             >
               <Icone className="size-5" />
               {rotulo}

@@ -4,7 +4,7 @@ import { exigirPapel } from "@/lib/auth"
 import { getObra } from "@/lib/obras"
 import { createClient } from "@/lib/supabase/server"
 import { dataHora } from "@/lib/format"
-import { ACOES, NOMES_TABELA, resumoMudancas } from "@/lib/auditoria"
+import { ACOES, NOMES_TABELA, carregarNomes, idsReferenciados, resumoMudancas } from "@/lib/auditoria"
 
 const POR_PAGINA = 50
 
@@ -31,9 +31,8 @@ export default async function HistoricoObra({
   if (f.tabela) consulta = consulta.eq("tabela", f.tabela)
   const { data: registros, count } = await consulta
 
-  const ids = [...new Set((registros ?? []).map((r) => r.usuario_id).filter(Boolean))] as string[]
-  const { data: perfis } = ids.length ? await supabase.from("perfis").select("id, nome").in("id", ids) : { data: [] }
-  const nomes = new Map((perfis ?? []).map((p) => [p.id, p.nome]))
+  const autores = (registros ?? []).map((r) => r.usuario_id).filter(Boolean) as string[]
+  const referenciados = await carregarNomes(supabase, [...new Set([...autores, ...idsReferenciados(registros ?? [])])])
   const total = count ?? 0
   const paginas = Math.max(1, Math.ceil(total / POR_PAGINA))
   const link = (p: number) => `?${new URLSearchParams({ ...(f.tabela ? { tabela: f.tabela } : {}), pagina: String(p) })}`
@@ -59,11 +58,11 @@ export default async function HistoricoObra({
       ) : (
         <ol className="grid gap-2">
           {(registros ?? []).map((r) => {
-            const mudancas = resumoMudancas(r.acao, r.antes, r.depois)
+            const mudancas = resumoMudancas(r.acao, r.antes, r.depois, referenciados)
             return (
               <li key={r.id} className="rounded-lg border bg-white px-4 py-3">
                 <p className="text-sm">
-                  <span className="font-medium">{r.usuario_id ? (nomes.get(r.usuario_id) ?? "Usuário") : "Sistema"}</span>{" "}
+                  <span className="font-medium">{r.usuario_id ? (referenciados[r.usuario_id] ?? "Usuário") : "Sistema"}</span>{" "}
                   {ACOES[r.acao]?.toLowerCase()} <span className="font-medium">{NOMES_TABELA[r.tabela] ?? r.tabela}</span>
                   <span className="text-muted-foreground"> · {dataHora(r.em)}</span>
                 </p>

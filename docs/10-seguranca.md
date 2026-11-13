@@ -65,6 +65,18 @@ sem passar pelas telas, que não são uma barreira de segurança.
 - **CSP com `'unsafe-inline'` para scripts:** é necessário no Next sem nonce. O React já escapa todo o conteúdo e não há HTML cru no código (`dangerouslySetInnerHTML` não é usado).
 - **Gestor vê nome e e-mail dos usuários ativos:** é necessário para adicionar membros às obras.
 
+## Security Advisor do Supabase (produção, 12/11/2026)
+
+Primeira análise do projeto de produção: 2 erros e 57 avisos. Situação de cada grupo:
+
+| Alerta | Qtd. | Situação |
+|---|---|---|
+| *Security Definer View* em `v_pessoas_basico` e `v_materiais_basico` | 2 erros | **Aceito (intencional).** As views existem para o perfil campo ver só nomes, sem acesso às tabelas: `id, nome, ativo` das pessoas (sem documento, telefone, e-mail) e `id, descricao, unidade, ativo` dos materiais (sem custo). Têm filtro `papel_atual() is not null` (só usuário ativo) e nenhum acesso do `anon`. Coberto por `teste-seguranca.ts`. |
+| Funções de gatilho executáveis pelo usuário logado (`auditar`, `*_antes_gravar`, `bloquear_*`...) | ~23 avisos | **Corrigido** na migration `20261112000011_funcoes_gatilho.sql` (EXECUTE retirado). O Postgres já recusava chamá-las pela API, mas não há motivo para ficarem expostas. Os triggers continuam disparando (o EXECUTE só é conferido ao criar o trigger). |
+| Ações chamadas pelo sistema (`aprovar_*`, `criar_lancamento`, `estornar_baixa`...) | ~17 avisos | **Aceito (intencional).** São a forma de o sistema executar regras de negócio; cada função confere o papel e a obra de quem chama. Coberto por pgTAP e `teste-seguranca.ts`. |
+| Funções usadas pelas políticas RLS (`papel_atual`, `tem_papel`, `acessa_obra`, `pode_*`...) | ~16 avisos | **Aceito (necessário).** O RLS as executa como o usuário logado; sem EXECUTE, todas as consultas falhariam. Só respondem sobre o próprio usuário. |
+| *Auth OTP long expiry* (links de e-mail valem 24 h) | 1 aviso | **Aceito (decisão).** O convite precisa sobreviver até a pessoa abrir o e-mail (equipe de campo). Os links são de uso único e chegam só à caixa do próprio usuário; o admin pode reenviar o convite. |
+
 ## Depois do deploy (no Supabase de produção)
 
 Os passos estão no README, seção "Colocar no ar":

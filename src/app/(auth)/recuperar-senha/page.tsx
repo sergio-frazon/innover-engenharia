@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useActionState } from "react"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { BotaoEnviar, Campo, ErroFormulario, erroCampo } from "@/components/comum/formulario"
+import { Formulario, BotaoEnviar, Campo, ErroFormulario, erroCampo } from "@/components/comum/formulario"
 import { recuperarSenha } from "../actions"
 
 export default function PaginaRecuperarSenha() {
@@ -18,13 +18,13 @@ export default function PaginaRecuperarSenha() {
           <AlertDescription>{estado.mensagem}</AlertDescription>
         </Alert>
       ) : (
-        <form action={acao} className="grid gap-4">
+        <Formulario acao={acao} estado={estado} className="grid gap-4">
           <ErroFormulario estado={estado} />
           <Campo rotulo="E-mail" nome="email" erro={erroCampo(estado, "email")}>
             <Input id="email" name="email" type="email" autoComplete="email" inputMode="email" required autoFocus />
           </Campo>
           <BotaoEnviar className="w-full">Enviar link</BotaoEnviar>
-        </form>
+        </Formulario>
       )}
       <Link href="/login" className="mt-4 block text-center text-sm text-blue-700 hover:underline">
         Voltar para o login
