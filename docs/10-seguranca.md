@@ -60,7 +60,10 @@ sem passar pelas telas, que não são uma barreira de segurança.
 
 ## Pontos conhecidos (aceitos)
 
-- **Dependências de desenvolvimento** (Vitest, ESLint, CLI do shadcn) têm alertas no `npm audit` completo. Elas não vão para produção.
+- **Dependências de desenvolvimento** (nada disso vai para produção; `npm audit --omit=dev` = 0). Em 12/11/2026, após os
+  alertas do Dependabot: Vitest 3 → 5.1.0 (corrige `tinypool` e `@vitest/mocker`, um deles crítico) e `minimatch`
+  forçado para 11.0.8 dentro do ESLint e da CLI do shadcn (via `overrides`). Restam 3 alertas **baixos** do `deepmerge`,
+  usado só pela CLI do shadcn (que não roda no build nem no site) e ainda sem versão corrigida.
 - **Sair por link:** `/auth/sair` aceita GET, então um link malicioso poderia deslogar alguém. Impacto: só um incômodo.
 - **CSP com `'unsafe-inline'` para scripts:** é necessário no Next sem nonce. O React já escapa todo o conteúdo e não há HTML cru no código (`dangerouslySetInnerHTML` não é usado).
 - **Gestor vê nome e e-mail dos usuários ativos:** é necessário para adicionar membros às obras.
