@@ -6,6 +6,16 @@ a receber, fluxo de caixa e alertas. Funciona no navegador do computador e do ce
 
 Especificação e regras completas: [`docs/`](docs/) (comece por [`docs/01-escopo.md`](docs/01-escopo.md)).
 
+## Em produção
+
+**Acesse: https://innover-engenharia.vercel.app**
+
+- Não há cadastro aberto: cada pessoa recebe um **convite por e-mail**, enviado por um administrador em
+  **Administração → Usuários**. O link do convite vale 24 horas e funciona uma vez (dá para reenviar pela mesma tela).
+- Hospedagem: Vercel (região São Paulo). Banco, login e arquivos: Supabase (região São Paulo).
+- Atualizações do site saem automaticamente a cada push na branch `main`. Mudanças no banco **não**: são aplicadas
+  à mão com `npx supabase db push --linked` (veja "Atualizações futuras do banco").
+
 ## Perfis
 
 | Perfil | Pode |
@@ -109,6 +119,7 @@ Relatório da última revisão: [`docs/10-seguranca.md`](docs/10-seguranca.md).
    - *Redirect URLs*: `https://SEU-DOMINIO/**`
 6. Em **Authentication → Emails → Templates**, troque os modelos para os que estão em português na pasta
    `supabase/templates/`. Isso é obrigatório: os links do sistema dependem deles.
+   O Supabase só libera a edição dos modelos **depois** de configurar o SMTP próprio (passo 8): faça o 8 antes.
    - **Invite user**: assunto `Seu acesso ao sistema de Gestão de Obras`; corpo = conteúdo de `convite.html`.
    - **Reset password**: assunto `Criar nova senha — Gestão de Obras`; corpo = conteúdo de `recuperacao.html`.
 7. Em **Authentication → Sign In / Providers → Email**, ajuste **Email OTP Expiration** para `86400`
@@ -117,7 +128,9 @@ Relatório da última revisão: [`docs/10-seguranca.md`](docs/10-seguranca.md).
 9. Em **Authentication → Sign In / Providers → Email**, ajuste **Minimum password length** para `8`
    (o mesmo mínimo exigido pelas telas).
 10. Em **Authentication → Attack Protection**, ative **Prevent use of leaked passwords** (plano Pro).
-11. Em **Advisors → Security Advisor**, rode a análise e confirme que não há alertas.
+11. Em **Advisors → Security Advisor**, rode a análise. O resultado esperado são 2 erros (*Security Definer View*
+    em `v_pessoas_basico` e `v_materiais_basico`) e cerca de 36 avisos, todos intencionais e explicados em
+    [`docs/10-seguranca.md`](docs/10-seguranca.md). Qualquer alerta fora dessa lista precisa ser investigado.
 12. **Backup:** o plano gratuito não tem backup gerenciado. Antes de colocar dados reais, assine o plano **Pro**, que faz backup diário com restauração.
 
 ### 2. Vercel
@@ -137,19 +150,33 @@ Relatório da última revisão: [`docs/10-seguranca.md`](docs/10-seguranca.md).
 
 ### 3. Primeiro administrador
 
-Com as variáveis de produção no terminal:
+Faça antes o passo 5 do Supabase (*Site URL*): o link do convite usa esse endereço.
 
-```bash
-NEXT_PUBLIC_SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... NEXT_PUBLIC_SITE_URL=https://SEU-DOMINIO npx tsx scripts/criar-admin.ts email@empresa.com.br "Nome Completo"
+No Windows (PowerShell), cole o bloco inteiro **numa mesma janela**, trocando só o endereço, o e-mail e o nome.
+A chave secreta **não** vai escrita no comando: cole-a apenas quando aparecer a pergunta "Cole a chave service_role".
+Ela fica oculta na tela e fora do histórico do terminal.
+
+```powershell
+$env:NEXT_PUBLIC_SUPABASE_URL = "https://SEU_PROJECT_REF.supabase.co"
+$env:NEXT_PUBLIC_SITE_URL = "https://SEU-DOMINIO"
+$s = Read-Host "Cole a chave service_role" -AsSecureString
+$env:SUPABASE_SERVICE_ROLE_KEY = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($s))
+npx tsx scripts/criar-admin.ts email@empresa.com.br "Nome Completo"
+Remove-Item Env:SUPABASE_SERVICE_ROLE_KEY; Remove-Variable s
 ```
+
+Se a chave secreta aparecer em algum lugar (tela, print, mensagem), gere uma nova no Supabase, troque na Vercel,
+faça um *Redeploy* e só então apague a antiga.
 
 A pessoa recebe um e-mail, define a senha e entra como administrador. Os demais usuários são convidados pela tela
 **Administração → Usuários**.
 
 ### Atualizações futuras do banco
 
-Nunca edite uma migration que já foi aplicada em produção. Crie um arquivo novo em `supabase/migrations/` e rode
-`npx supabase db push`.
+Nunca edite uma migration que já foi aplicada em produção. Crie um arquivo novo em `supabase/migrations/`, teste no
+banco local (`npx supabase db reset --local` e `npx supabase test db`) e só então rode `npx supabase db push --linked`.
+
+Com o projeto ligado à produção (`supabase link`), **nunca** rode `npx supabase db reset` sem `--local`: ele apaga o banco.
 
 ---
 
